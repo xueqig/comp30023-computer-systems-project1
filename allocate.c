@@ -101,13 +101,13 @@ int main(int argc, char **argv)
         }
 
         // execute process
+        if (q->head->rem_time == 0)
+        {
+            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem - 1);
+            dequeue(q, cur_time);
+        }
         if (q->proc_rem > 0)
         {
-            if (q->head->rem_time == 0)
-            {
-                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem - 1);
-                dequeue(q, cur_time);
-            }
             if (q->head->pid != q->cur_pid)
             {
                 printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
@@ -118,7 +118,6 @@ int main(int argc, char **argv)
         }
         cur_time++;
     }
-
     return 0;
 }
 
@@ -192,16 +191,13 @@ void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char
 
 void dequeue(queue_t *q, int cur_time)
 {
-    // If queue is empty, return NULL.
+    // If queue is empty, return
     if (q->head == NULL)
     {
         return;
     }
 
-    // Store previous head and move head one node ahead
-    process_t *temp = q->head;
-    q->head = q->head->next;
-
+    // if queue is not empty
     q->proc_rem--;
     q->tot_num_proc++;
 
@@ -213,6 +209,10 @@ void dequeue(queue_t *q, int cur_time)
     {
         q->max_toh = toh;
     }
+
+    // Store previous head and move head one node ahead
+    process_t *temp = q->head;
+    q->head = q->head->next;
 
     free(temp);
 }
