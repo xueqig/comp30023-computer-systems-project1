@@ -6,7 +6,7 @@
 typedef struct process
 {
     int arr_time;
-    int id;
+    int pid;
     int exe_time;
     int rem_time;
     char is_par;
@@ -19,12 +19,11 @@ typedef struct
     int id;
     int tot_rem_time;
     int proc_rem;
-    int is_occup;
 } queue_t;
 
 queue_t *init_queue();
-process_t *new_process(int arr_time, int id, int exe_time, int rem_time, char is_par);
-void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par);
+process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
+void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void print_queue(queue_t *q);
 
 int main(int argc, char **argv)
@@ -77,6 +76,7 @@ int main(int argc, char **argv)
                 }
                 fclose(input_file);
 
+                // add process to queue
                 queue_t *q = init_queue(0);
                 while (nth_process < num_processes_data && processes_data[nth_process][0] == cur_time)
                 {
@@ -84,6 +84,12 @@ int main(int argc, char **argv)
                     nth_process++;
                 }
                 print_queue(q);
+
+                if (q->proc_rem > 0)
+                {
+                    printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
+                    q->head->rem_time--;
+                }
             }
         default:
             break;
@@ -100,15 +106,14 @@ queue_t *init_queue(int id)
     q->id = id;
     q->tot_rem_time = 0;
     q->proc_rem = 0;
-    q->is_occup = 0;
     return q;
 }
 
-process_t *new_process(int arr_time, int id, int exe_time, int rem_time, char is_par)
+process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par)
 {
     process_t *temp = (process_t *)malloc(sizeof(process_t));
     temp->arr_time = arr_time;
-    temp->id = id;
+    temp->pid = pid;
     temp->exe_time = exe_time;
     temp->rem_time = rem_time;
     temp->is_par = is_par;
@@ -116,12 +121,12 @@ process_t *new_process(int arr_time, int id, int exe_time, int rem_time, char is
     return temp;
 }
 
-void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par)
+void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char is_par)
 {
     process_t *start = q->head;
 
     // Create a new LL process
-    process_t *temp = new_process(arr_time, id, exe_time, rem_time, is_par);
+    process_t *temp = new_process(arr_time, pid, exe_time, rem_time, is_par);
 
     // If queue is empty, then new process is head
     if (q->head == NULL)
@@ -130,7 +135,7 @@ void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char 
     }
     // The head has greater rem_time than new process.
     // So insert new process before head process and change head process.
-    else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->id > id))
+    else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->pid > pid))
     {
         // Insert New process before head
         temp->next = q->head;
@@ -141,7 +146,7 @@ void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char 
         // Traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
-                (start->next->rem_time == rem_time && start->next->id > id)))
+                (start->next->rem_time == rem_time && start->next->pid > pid)))
         {
             start = start->next;
         }
@@ -164,10 +169,11 @@ void print_queue(queue_t *q)
         return;
     }
 
-    printf("id: %d, rem_time: %d, is_par: %c\n", start->id, start->rem_time, start->is_par);
+    printf("pid: %d, rem_time: %d, is_par: %c\n", start->pid, start->rem_time, start->is_par);
     while (start->next != NULL)
     {
         start = start->next;
-        printf("id: %d, rem_time: %d, is_par: %c\n", start->id, start->rem_time, start->is_par);
+        printf("pid: %d, rem_time: %d, is_par: %c\n", start->pid, start->rem_time, start->is_par);
     }
+    printf("id: %d, proc_rem: %d\n", q->id, q->proc_rem);
 }
