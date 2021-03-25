@@ -91,12 +91,10 @@ int main(int argc, char **argv)
     queue_t *q = init_queue(0);
     while (!(nth_proc == tot_num_proc_data && q->proc_rem == 0))
     {
-        // printf("cur_time: %d\n", cur_time);
         // add process to queue
         while (nth_proc < tot_num_proc_data && proc_data[nth_proc][0] == cur_time)
         {
             enqueue(q, proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
-            // printf("%d after enqueue, head pid: %d, rem_time: %d\n", cur_time, q->head->pid, q->head->rem_time);
             nth_proc++;
         }
 
@@ -158,21 +156,18 @@ void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char
     // If queue is empty, then new process is head
     if (q->head == NULL)
     {
-        // printf("empty queue\n");
         q->head = temp;
     }
     // The head has greater rem_time than new process.
     // So insert new process before head process and change head process.
     else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->pid > pid))
     {
-        // printf("insert before head\n");
         // Insert New process before head
         temp->next = q->head;
         q->head = temp;
     }
     else
     {
-        // printf("need to traverse\n");
         // Traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
