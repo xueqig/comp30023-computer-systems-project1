@@ -122,7 +122,7 @@ int main(int argc, char **argv)
         cur_time++;
     }
 
-    printf("Turnaround time %.0f\n", ceil((double)q->tot_tat / q->tot_num_proc));
+    printf("Turnaround time %.0f\n", (double)q->tot_tat / q->tot_num_proc);
     printf("Time overhead %.2f %.2f\n", q->max_toh, (double)q->tot_toh / q->tot_num_proc);
     printf("Makespan %d\n", cur_time);
     return 0;
