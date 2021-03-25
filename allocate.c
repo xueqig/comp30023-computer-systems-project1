@@ -9,7 +9,7 @@ typedef struct node
     int id;
     int exe_time;
     int rem_time;
-    int is_par;
+    char is_par;
     struct node *next;
 } node_t;
 
@@ -23,8 +23,8 @@ typedef struct
 } queue_t;
 
 queue_t *init_queue();
-node_t *new_node(int arr_time, int id, int exe_time, int rem_time, int is_par);
-void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, int is_par);
+node_t *new_node(int arr_time, int id, int exe_time, int rem_time, char is_par);
+void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par);
 void print_queue(queue_t *q);
 
 int main(int argc, char **argv)
@@ -77,17 +77,6 @@ int main(int argc, char **argv)
                 }
                 fclose(input_file);
 
-                //
-                int i, j;
-                for (i = 0; i < num_processes_data; i++)
-                {
-                    for (j = 0; j < 4; j++)
-                    {
-                        printf(" %d", processes_data[i][j]);
-                    }
-                    printf("\n");
-                }
-
                 queue_t *q = init_queue(0);
                 while (nth_process < num_processes_data && processes_data[nth_process][0] == cur_time)
                 {
@@ -115,16 +104,19 @@ queue_t *init_queue(int id)
     return q;
 }
 
-node_t *new_node(int arr_time, int id, int exe_time, int rem_time, int is_par)
+node_t *new_node(int arr_time, int id, int exe_time, int rem_time, char is_par)
 {
     node_t *temp = (node_t *)malloc(sizeof(node_t));
+    temp->arr_time = arr_time;
     temp->id = id;
+    temp->exe_time = exe_time;
     temp->rem_time = rem_time;
+    temp->is_par = is_par;
     temp->next = NULL;
     return temp;
 }
 
-void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, int is_par)
+void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par)
 {
     node_t *start = q->head;
 
@@ -172,11 +164,10 @@ void print_queue(queue_t *q)
         return;
     }
 
+    printf("id: %d, rem_time: %d, is_par: %c\n", start->id, start->rem_time, start->is_par);
     while (start->next != NULL)
     {
-        printf("id: %d, rem_time: %d, is_par: %d\n", start->id, start->rem_time, start->is_par);
         start = start->next;
+        printf("id: %d, rem_time: %d, is_par: %c\n", start->id, start->rem_time, start->is_par);
     }
-    // print the last node in the queue
-    printf("id: %d, rem_time: %d, is_par: %d\n", start->id, start->rem_time, start->is_par);
 }
