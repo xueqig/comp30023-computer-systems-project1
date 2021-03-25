@@ -29,6 +29,7 @@ typedef struct
 queue_t *init_queue();
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char is_par);
+void dequeue(queue_t *q, int cur_time);
 void print_queue(queue_t *q);
 
 int main(int argc, char **argv)
@@ -96,11 +97,13 @@ int main(int argc, char **argv)
                     if (q->head->rem_time == 0)
                     {
                         printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem);
+                        dequeue(q, cur_time);
                     }
                     else
                     {
                         printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
                         q->head->rem_time--;
+                        q->tot_rem_time--;
                     }
                 }
             }
@@ -174,6 +177,33 @@ void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char
     }
     q->tot_rem_time += rem_time;
     q->proc_rem++;
+}
+
+void dequeue(queue_t *q, int cur_time)
+{
+    // If queue is empty, return NULL.
+    if (q->head == NULL)
+    {
+        return;
+    }
+
+    // Store previous head and move head one node ahead
+    process_t *temp = q->head;
+    q->head = q->head->next;
+
+    q->proc_rem--;
+    q->tot_num_proc++;
+
+    int tat = cur_time - q->head->arr_time;
+    int toh = tat / q->head->exe_time;
+    q->tot_tat += tat;
+    q->tot_toh += (tat / q->head->exe_time);
+    if (toh > q->max_toh)
+    {
+        q->max_toh = toh;
+    }
+
+    free(temp);
 }
 
 void print_queue(queue_t *q)
