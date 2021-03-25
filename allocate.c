@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 typedef struct process
 {
@@ -21,9 +22,9 @@ typedef struct
     int tot_rem_time;
     int proc_rem;
     int tot_num_proc;
-    int tot_tat; // total turnaround time
-    int max_toh; // max time overhead
-    int tot_toh; // total time overhead
+    int tot_tat;    // total turnaround time
+    double max_toh; // max time overhead
+    double tot_toh; // total time overhead
 
 } queue_t;
 
@@ -104,18 +105,26 @@ int main(int argc, char **argv)
             printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem - 1);
             dequeue(q, cur_time);
         }
-        if (q->proc_rem > 0)
+
+        if (q->proc_rem == 0)
         {
-            if (q->head->pid != q->cur_pid)
-            {
-                printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
-                q->cur_pid = q->head->pid;
-            }
-            q->head->rem_time--;
-            q->tot_rem_time--;
+            break;
         }
+
+        if (q->head->pid != q->cur_pid)
+        {
+            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
+            q->cur_pid = q->head->pid;
+        }
+        q->head->rem_time--;
+        q->tot_rem_time--;
+
         cur_time++;
     }
+
+    printf("Turnaround time %.0f\n", ceil((double)q->tot_tat / q->tot_num_proc));
+    printf("Time overhead %.2f %.2f\n", q->max_toh, (double)q->tot_toh / q->tot_num_proc);
+    printf("Makespan %d\n", cur_time);
     return 0;
 }
 
@@ -197,9 +206,9 @@ void dequeue(queue_t *q, int cur_time)
     q->tot_num_proc++;
 
     int tat = cur_time - q->head->arr_time;
-    int toh = tat / q->head->exe_time;
+    double toh = (double)tat / q->head->exe_time;
     q->tot_tat += tat;
-    q->tot_toh += (tat / q->head->exe_time);
+    q->tot_toh += ((double)tat / q->head->exe_time);
     if (toh > q->max_toh)
     {
         q->max_toh = toh;
