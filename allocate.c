@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
 typedef struct process
 {
@@ -52,7 +51,6 @@ int main(int argc, char **argv)
         {
         case 'p':
             proessors = atoi(optarg);
-            printf("proessors = %d\n", proessors);
             break;
         case 'f':
             if ((input_file = fopen(optarg, "r")))
