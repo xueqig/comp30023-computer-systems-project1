@@ -3,19 +3,19 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef struct node
+typedef struct process
 {
     int arr_time;
     int id;
     int exe_time;
     int rem_time;
     char is_par;
-    struct node *next;
-} node_t;
+    struct process *next;
+} process_t;
 
 typedef struct
 {
-    node_t *head;
+    process_t *head;
     int id;
     int tot_rem_time;
     int proc_rem;
@@ -23,7 +23,7 @@ typedef struct
 } queue_t;
 
 queue_t *init_queue();
-node_t *new_node(int arr_time, int id, int exe_time, int rem_time, char is_par);
+process_t *new_process(int arr_time, int id, int exe_time, int rem_time, char is_par);
 void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par);
 void print_queue(queue_t *q);
 
@@ -104,9 +104,9 @@ queue_t *init_queue(int id)
     return q;
 }
 
-node_t *new_node(int arr_time, int id, int exe_time, int rem_time, char is_par)
+process_t *new_process(int arr_time, int id, int exe_time, int rem_time, char is_par)
 {
-    node_t *temp = (node_t *)malloc(sizeof(node_t));
+    process_t *temp = (process_t *)malloc(sizeof(process_t));
     temp->arr_time = arr_time;
     temp->id = id;
     temp->exe_time = exe_time;
@@ -118,27 +118,27 @@ node_t *new_node(int arr_time, int id, int exe_time, int rem_time, char is_par)
 
 void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char is_par)
 {
-    node_t *start = q->head;
+    process_t *start = q->head;
 
-    // Create a new LL node
-    node_t *temp = new_node(arr_time, id, exe_time, rem_time, is_par);
+    // Create a new LL process
+    process_t *temp = new_process(arr_time, id, exe_time, rem_time, is_par);
 
-    // If queue is empty, then new node is head
+    // If queue is empty, then new process is head
     if (q->head == NULL)
     {
         q->head = temp;
     }
-    // The head has greater rem_time than new node.
-    // So insert new node before head node and change head node.
+    // The head has greater rem_time than new process.
+    // So insert new process before head process and change head process.
     else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->id > id))
     {
-        // Insert New Node before head
+        // Insert New process before head
         temp->next = q->head;
         q->head = temp;
     }
     else
     {
-        // Traverse the list and find a position to insert new node
+        // Traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
                 (start->next->rem_time == rem_time && start->next->id > id)))
@@ -156,7 +156,7 @@ void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, char 
 
 void print_queue(queue_t *q)
 {
-    node_t *start = q->head;
+    process_t *start = q->head;
 
     if (q->head == NULL)
     {
