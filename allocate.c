@@ -19,6 +19,11 @@ typedef struct
     int id;
     int tot_rem_time;
     int proc_rem;
+    int tot_num_proc;
+    int tot_tat; // total turnaround time
+    int max_toh; // max time overhead
+    int tot_toh; // total time overhead
+
 } queue_t;
 
 queue_t *init_queue();
@@ -85,10 +90,18 @@ int main(int argc, char **argv)
                 }
                 print_queue(q);
 
+                // execute process
                 if (q->proc_rem > 0)
                 {
-                    printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
-                    q->head->rem_time--;
+                    if (q->head->rem_time == 0)
+                    {
+                        printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem);
+                    }
+                    else
+                    {
+                        printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
+                        q->head->rem_time--;
+                    }
                 }
             }
         default:
@@ -106,6 +119,10 @@ queue_t *init_queue(int id)
     q->id = id;
     q->tot_rem_time = 0;
     q->proc_rem = 0;
+    q->tot_num_proc = 0;
+    q->tot_tat = 0;
+    q->max_toh = 0;
+    q->tot_toh = 0;
     return q;
 }
 
