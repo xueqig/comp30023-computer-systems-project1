@@ -3,17 +3,29 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef struct process
+typedef struct node
 {
     int arr_time;
     int id;
     int exe_time;
     int rem_time;
-    char is_par;
-} process_t;
+    int is_par;
+    struct node *next;
+} node_t;
 
-process_t create_process(char str[]);
-int get_arr_time(char str[]);
+typedef struct
+{
+    node_t *head;
+    int id;
+    int tot_rem_time;
+    int proc_rem;
+    int is_occup;
+} queue_t;
+
+queue_t *init_queue();
+node_t *new_node(int arr_time, int id, int exe_time, int rem_time, int is_par);
+void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, int is_par);
+void print_queue(queue_t *q);
 
 int main(int argc, char **argv)
 {
@@ -21,12 +33,14 @@ int main(int argc, char **argv)
     FILE *input_file;
     char buff[200];
 
-    char process_data[100][100];
-    int num_process_data = 0;
+    int processes_data[100][4];
+    int num_processes_data = 0;
+    int nth_process = 0;
 
-    int time = 0;
+    int cur_time = 0;
 
     while ((option = getopt(argc, argv, "p:f:")) != -1)
+    {
         switch (option)
         {
         case 'p':
@@ -36,65 +50,133 @@ int main(int argc, char **argv)
         case 'f':
             if ((input_file = fopen(optarg, "r")))
             {
+                // read input file and store processes data in processes_data
                 while (fgets(buff, 200, (FILE *)input_file))
                 {
-                    strcpy(process_data[num_process_data++], buff);
+                    char *token;
+                    int num_tokens = 0;
+
+                    // breaks the string str into multiple tokens using space
+                    token = strtok(buff, " ");
+
+                    while (token != NULL)
+                    {
+                        // the first three items are number
+                        if (num_tokens < 3)
+                        {
+                            processes_data[num_processes_data][num_tokens++] = atoi(token);
+                        }
+                        // the last item is a char
+                        else
+                        {
+                            processes_data[num_processes_data][num_tokens++] = token[0];
+                        }
+                        token = strtok(NULL, " ");
+                    }
+                    num_processes_data++;
                 }
+                fclose(input_file);
+
+                //
+                int i, j;
+                for (i = 0; i < num_processes_data; i++)
+                {
+                    for (j = 0; j < 4; j++)
+                    {
+                        printf(" %d", processes_data[i][j]);
+                    }
+                    printf("\n");
+                }
+
+                queue_t *q = init_queue(0);
+                while (nth_process < num_processes_data && processes_data[nth_process][0] == cur_time)
+                {
+                    enqueue(q, processes_data[nth_process][0], processes_data[nth_process][1], processes_data[nth_process][2], processes_data[nth_process][2], processes_data[nth_process][3]);
+                    nth_process++;
+                }
+                print_queue(q);
             }
         default:
-            return 0;
+            break;
         }
+    }
+
     return 0;
 }
 
-int get_arr_time(char str[])
+queue_t *init_queue(int id)
 {
-    char *token;
-    token = strtok(str, " ");
-    return atoi(token);
+    queue_t *q = (queue_t *)malloc(sizeof(queue_t));
+    q->head = NULL;
+    q->id = id;
+    q->tot_rem_time = 0;
+    q->proc_rem = 0;
+    q->is_occup = 0;
+    return q;
 }
 
-process_t create_process(char str[])
+node_t *new_node(int arr_time, int id, int exe_time, int rem_time, int is_par)
 {
-    process_t process;
-    char *token;
-    int tokens[4];
-    int num_tokens = 0;
-
-    // breaks the string str into multiple tokens using space
-    token = strtok(str, " ");
-
-    while (token != NULL)
-    {
-        // the first three items are number
-        if (num_tokens < 3)
-        {
-            tokens[num_tokens++] = atoi(token);
-        }
-        // the last item is a char
-        else
-        {
-            tokens[num_tokens++] = token[0];
-        }
-        token = strtok(NULL, " ");
-    }
-
-    process.arr_time = tokens[0];
-    process.id = tokens[1];
-    process.exe_time = tokens[2];
-    process.rem_time = tokens[2];
-    process.is_par = tokens[3];
-    return process;
+    node_t *temp = (node_t *)malloc(sizeof(node_t));
+    temp->id = id;
+    temp->rem_time = rem_time;
+    temp->next = NULL;
+    return temp;
 }
 
-void print_process(int num_process, process_t processes[])
+void enqueue(queue_t *q, int arr_time, int id, int exe_time, int rem_time, int is_par)
 {
-    int j = 0;
-    printf("num_process %d\n", num_process);
-    while (j < num_process)
+    node_t *start = q->head;
+
+    // Create a new LL node
+    node_t *temp = new_node(arr_time, id, exe_time, rem_time, is_par);
+
+    // If queue is empty, then new node is head
+    if (q->head == NULL)
     {
-        process_t cur_process = processes[j];
-        printf("arr_time: %d, id: %d, exe_time: %d, is_par: %c\n", cur_process.arr_time, cur_process.id, cur_process.exe_time, cur_process.is_par);
-        j++;
+        q->head = temp;
     }
+    // The head has greater rem_time than new node.
+    // So insert new node before head node and change head node.
+    else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->id > id))
+    {
+        // Insert New Node before head
+        temp->next = q->head;
+        q->head = temp;
+    }
+    else
+    {
+        // Traverse the list and find a position to insert new node
+        while (start->next != NULL &&
+               (start->next->rem_time < rem_time ||
+                (start->next->rem_time == rem_time && start->next->id > id)))
+        {
+            start = start->next;
+        }
+
+        // Either at the ends of the list or at required position
+        temp->next = start->next;
+        start->next = temp;
+    }
+    q->tot_rem_time += rem_time;
+    q->proc_rem++;
+}
+
+void print_queue(queue_t *q)
+{
+    node_t *start = q->head;
+
+    if (q->head == NULL)
+    {
+        printf("queue is empty\n");
+        return;
+    }
+
+    while (start->next != NULL)
+    {
+        printf("id: %d, rem_time: %d, is_par: %d\n", start->id, start->rem_time, start->is_par);
+        start = start->next;
+    }
+    // print the last node in the queue
+    printf("id: %d, rem_time: %d, is_par: %d\n", start->id, start->rem_time, start->is_par);
 }
