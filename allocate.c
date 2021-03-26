@@ -31,7 +31,7 @@ cpu_t *init_queue();
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void dequeue(cpu_t *cpu, int cur_time);
-int exe_process(cpu_t *cpu, int cur_time);
+int run_process(cpu_t *cpu, int cur_time);
 void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
         // execute process
         // only increase cur_time when there is a process running
-        if (exe_process(cpu, cur_time))
+        if (run_process(cpu, cur_time))
         {
             cur_time++;
         }
@@ -205,7 +205,7 @@ void dequeue(cpu_t *cpu, int cur_time)
     free(temp);
 }
 
-int exe_process(cpu_t *cpu, int cur_time)
+int run_process(cpu_t *cpu, int cur_time)
 {
     if (cpu->head->rem_time == 0)
     {
