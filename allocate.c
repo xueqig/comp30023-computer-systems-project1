@@ -25,13 +25,13 @@ typedef struct
     double max_toh; // max time overhead
     double tot_toh; // total time overhead
 
-} queue_t;
+} cpu_t;
 
-queue_t *init_queue();
+cpu_t *init_queue();
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
-void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char is_par);
-void dequeue(queue_t *q, int cur_time);
-void print_queue(queue_t *q);
+void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
+void dequeue(cpu_t *cpu, int cur_time);
+void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
@@ -87,58 +87,58 @@ int main(int argc, char **argv)
         }
     }
 
-    queue_t *q = init_queue(0);
-    while (!(nth_proc == tot_num_proc_data && q->proc_rem == 0))
+    cpu_t *cpu = init_queue(0);
+    while (!(nth_proc == tot_num_proc_data && cpu->proc_rem == 0))
     {
         // add process to queue
         while (nth_proc < tot_num_proc_data && proc_data[nth_proc][0] == cur_time)
         {
-            enqueue(q, proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
+            enqueue(cpu, proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
             nth_proc++;
         }
 
         // execute process
-        if (q->head->rem_time == 0)
+        if (cpu->head->rem_time == 0)
         {
-            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, q->head->pid, q->proc_rem - 1);
-            dequeue(q, cur_time);
+            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
+            dequeue(cpu, cur_time);
         }
 
-        if (q->proc_rem == 0)
+        if (cpu->proc_rem == 0)
         {
             break;
         }
 
-        if (q->head->pid != q->cur_pid)
+        if (cpu->head->pid != cpu->cur_pid)
         {
-            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, q->head->pid, q->head->rem_time, q->id);
-            q->cur_pid = q->head->pid;
+            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
+            cpu->cur_pid = cpu->head->pid;
         }
-        q->head->rem_time--;
-        q->tot_rem_time--;
+        cpu->head->rem_time--;
+        cpu->tot_rem_time--;
 
         cur_time++;
     }
 
-    printf("Turnaround time %.0f\n", (double)q->tot_tat / q->tot_num_proc);
-    printf("Time overhead %.2f %.2f\n", q->max_toh, (double)q->tot_toh / q->tot_num_proc);
+    printf("Turnaround time %.0f\n", (double)cpu->tot_tat / cpu->tot_num_proc);
+    printf("Time overhead %.2f %.2f\n", cpu->max_toh, (double)cpu->tot_toh / cpu->tot_num_proc);
     printf("Makespan %d\n", cur_time);
     return 0;
 }
 
-queue_t *init_queue(int id)
+cpu_t *init_queue(int id)
 {
-    queue_t *q = (queue_t *)malloc(sizeof(queue_t));
-    q->head = NULL;
-    q->id = id;
-    q->cur_pid = -1;
-    q->tot_rem_time = 0;
-    q->proc_rem = 0;
-    q->tot_num_proc = 0;
-    q->tot_tat = 0;
-    q->max_toh = 0;
-    q->tot_toh = 0;
-    return q;
+    cpu_t *cpu = (cpu_t *)malloc(sizeof(cpu_t));
+    cpu->head = NULL;
+    cpu->id = id;
+    cpu->cur_pid = -1;
+    cpu->tot_rem_time = 0;
+    cpu->proc_rem = 0;
+    cpu->tot_num_proc = 0;
+    cpu->tot_tat = 0;
+    cpu->max_toh = 0;
+    cpu->tot_toh = 0;
+    return cpu;
 }
 
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par)
@@ -153,25 +153,25 @@ process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char i
     return temp;
 }
 
-void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char is_par)
+void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par)
 {
-    process_t *start = q->head;
+    process_t *start = cpu->head;
 
     // Create a new process
     process_t *temp = new_process(arr_time, pid, exe_time, rem_time, is_par);
 
     // If queue is empty, then new process is head
-    if (q->head == NULL)
+    if (cpu->head == NULL)
     {
-        q->head = temp;
+        cpu->head = temp;
     }
     // The head has greater rem_time than new process.
     // So insert new process before head process and change head process.
-    else if (q->head->rem_time > rem_time || (q->head->rem_time == rem_time && q->head->pid > pid))
+    else if (cpu->head->rem_time > rem_time || (cpu->head->rem_time == rem_time && cpu->head->pid > pid))
     {
         // Insert New process before head
-        temp->next = q->head;
-        q->head = temp;
+        temp->next = cpu->head;
+        cpu->head = temp;
     }
     else
     {
@@ -187,43 +187,43 @@ void enqueue(queue_t *q, int arr_time, int pid, int exe_time, int rem_time, char
         temp->next = start->next;
         start->next = temp;
     }
-    q->tot_rem_time += rem_time;
-    q->proc_rem++;
+    cpu->tot_rem_time += rem_time;
+    cpu->proc_rem++;
 }
 
-void dequeue(queue_t *q, int cur_time)
+void dequeue(cpu_t *cpu, int cur_time)
 {
     // If queue is empty, return
-    if (q->head == NULL)
+    if (cpu->head == NULL)
     {
         return;
     }
 
     // if queue is not empty
-    q->proc_rem--;
-    q->tot_num_proc++;
+    cpu->proc_rem--;
+    cpu->tot_num_proc++;
 
-    int tat = cur_time - q->head->arr_time;
-    double toh = (double)tat / q->head->exe_time;
-    q->tot_tat += tat;
-    q->tot_toh += ((double)tat / q->head->exe_time);
-    if (toh > q->max_toh)
+    int tat = cur_time - cpu->head->arr_time;
+    double toh = (double)tat / cpu->head->exe_time;
+    cpu->tot_tat += tat;
+    cpu->tot_toh += ((double)tat / cpu->head->exe_time);
+    if (toh > cpu->max_toh)
     {
-        q->max_toh = toh;
+        cpu->max_toh = toh;
     }
 
     // Store previous head and move head one node ahead
-    process_t *temp = q->head;
-    q->head = q->head->next;
+    process_t *temp = cpu->head;
+    cpu->head = cpu->head->next;
 
     free(temp);
 }
 
-void print_queue(queue_t *q)
+void print_queue(cpu_t *cpu)
 {
-    process_t *start = q->head;
+    process_t *start = cpu->head;
 
-    if (q->head == NULL)
+    if (cpu->head == NULL)
     {
         printf("queue is empty\n");
         return;
@@ -235,5 +235,5 @@ void print_queue(queue_t *q)
         start = start->next;
         printf("pid: %d, rem_time: %d, is_par: %c\n", start->pid, start->rem_time, start->is_par);
     }
-    printf("id: %d, proc_rem: %d\n", q->id, q->proc_rem);
+    printf("id: %d, proc_rem: %d\n", cpu->id, cpu->proc_rem);
 }
