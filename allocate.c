@@ -36,7 +36,7 @@ void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
-    int option, proessors;
+    int option, num_cpus;
     FILE *input_file;
     char buff[200];
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
         switch (option)
         {
         case 'p':
-            proessors = atoi(optarg);
+            num_cpus = atoi(optarg);
             break;
         case 'f':
             if ((input_file = fopen(optarg, "r")))
