@@ -20,7 +20,7 @@ typedef struct
     int cur_pid;
     int tot_rem_time;
     int proc_rem;
-    int tot_num_proc;
+    int num_fin_proc;
     int tot_tat;    // total turnaround time
     double max_toh; // max time overhead
     double tot_toh; // total time overhead
@@ -44,8 +44,8 @@ int main(int argc, char **argv)
     int proc_data[100][4];
     int tot_num_proc = 0;
     int nth_proc = 0;
+    int tot_num_fin_proc = 0;
 
-    int num_fin_proc = 0;
     int i;
 
     int cur_time = 0;
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     }
 
     // cpu_t *cpu = init_queue(0);
-    while (num_fin_proc < tot_num_proc)
+    while (tot_num_fin_proc < tot_num_proc)
     {
         // add process to queue
         while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
@@ -119,8 +119,8 @@ int main(int argc, char **argv)
             // check if the head process is finished
             if (cpus[i]->head->rem_time == 0)
             {
-                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, cpus[i]->proc_rem - 1);
-                num_fin_proc++;
+                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, tot_num_proc - tot_num_fin_proc);
+                tot_num_fin_proc++;
                 dequeue(cpus[i], cur_time);
             }
             run_process(cpus[i], cur_time);
@@ -142,7 +142,7 @@ cpu_t *init_queue(int id)
     cpu->cur_pid = -1;
     cpu->tot_rem_time = 0;
     cpu->proc_rem = 0;
-    cpu->tot_num_proc = 0;
+    cpu->num_fin_proc = 0;
     cpu->tot_tat = 0;
     cpu->max_toh = 0;
     cpu->tot_toh = 0;
@@ -209,7 +209,7 @@ void dequeue(cpu_t *cpu, int cur_time)
 
     // if queue is not empty
     cpu->proc_rem--;
-    cpu->tot_num_proc++;
+    cpu->num_fin_proc++;
 
     int tat = cur_time - cpu->head->arr_time;
     double toh = (double)tat / cpu->head->exe_time;
