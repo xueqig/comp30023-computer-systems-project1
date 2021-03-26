@@ -31,6 +31,7 @@ cpu_t *init_queue();
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void dequeue(cpu_t *cpu, int cur_time);
+int exe_process(cpu_t *cpu, int cur_time);
 void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
@@ -98,26 +99,11 @@ int main(int argc, char **argv)
         }
 
         // execute process
-        if (cpu->head->rem_time == 0)
+        // only increase cur_time when there is a process running
+        if (exe_process(cpu, cur_time))
         {
-            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
-            dequeue(cpu, cur_time);
+            cur_time++;
         }
-
-        if (cpu->proc_rem == 0)
-        {
-            break;
-        }
-
-        if (cpu->head->pid != cpu->cur_pid)
-        {
-            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
-            cpu->cur_pid = cpu->head->pid;
-        }
-        cpu->head->rem_time--;
-        cpu->tot_rem_time--;
-
-        cur_time++;
     }
 
     printf("Turnaround time %.0f\n", (double)cpu->tot_tat / cpu->tot_num_proc);
@@ -217,6 +203,30 @@ void dequeue(cpu_t *cpu, int cur_time)
     cpu->head = cpu->head->next;
 
     free(temp);
+}
+
+int exe_process(cpu_t *cpu, int cur_time)
+{
+    if (cpu->head->rem_time == 0)
+    {
+        printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
+        dequeue(cpu, cur_time);
+    }
+
+    if (cpu->proc_rem == 0)
+    {
+        return 0;
+    }
+
+    if (cpu->head->pid != cpu->cur_pid)
+    {
+        printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
+        cpu->cur_pid = cpu->head->pid;
+    }
+    cpu->head->rem_time--;
+    cpu->tot_rem_time--;
+
+    return 1;
 }
 
 void print_queue(cpu_t *cpu)
