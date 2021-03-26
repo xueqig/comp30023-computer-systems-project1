@@ -41,8 +41,10 @@ int main(int argc, char **argv)
     char buff[200];
 
     int proc_data[100][4];
-    int tot_num_proc_data = 0;
+    int tot_num_proc = 0;
     int nth_proc = 0;
+
+    int num_fin_proc = 0;
 
     int cur_time = 0;
 
@@ -70,16 +72,16 @@ int main(int argc, char **argv)
                         // the first three items are number
                         if (num_tokens < 3)
                         {
-                            proc_data[tot_num_proc_data][num_tokens++] = atoi(token);
+                            proc_data[tot_num_proc][num_tokens++] = atoi(token);
                         }
                         // the last item is a char
                         else
                         {
-                            proc_data[tot_num_proc_data][num_tokens++] = token[0];
+                            proc_data[tot_num_proc][num_tokens++] = token[0];
                         }
                         token = strtok(NULL, " ");
                     }
-                    tot_num_proc_data++;
+                    tot_num_proc++;
                 }
                 fclose(input_file);
             }
@@ -89,10 +91,10 @@ int main(int argc, char **argv)
     }
 
     cpu_t *cpu = init_queue(0);
-    while (!(nth_proc == tot_num_proc_data && cpu->proc_rem == 0))
+    while (num_fin_proc < tot_num_proc)
     {
         // add process to queue
-        while (nth_proc < tot_num_proc_data && proc_data[nth_proc][0] == cur_time)
+        while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
         {
             enqueue(cpu, proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
             nth_proc++;
@@ -102,6 +104,7 @@ int main(int argc, char **argv)
         if (cpu->head->rem_time == 0)
         {
             printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
+            num_fin_proc++;
             dequeue(cpu, cur_time);
         }
 
