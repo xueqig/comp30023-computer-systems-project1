@@ -99,6 +99,12 @@ int main(int argc, char **argv)
         }
 
         // execute process
+        if (cpu->head->rem_time == 0)
+        {
+            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
+            dequeue(cpu, cur_time);
+        }
+
         // only increase cur_time when there is a process running
         if (run_process(cpu, cur_time))
         {
@@ -207,12 +213,6 @@ void dequeue(cpu_t *cpu, int cur_time)
 
 int run_process(cpu_t *cpu, int cur_time)
 {
-    if (cpu->head->rem_time == 0)
-    {
-        printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
-        dequeue(cpu, cur_time);
-    }
-
     if (cpu->proc_rem == 0)
     {
         return 0;
