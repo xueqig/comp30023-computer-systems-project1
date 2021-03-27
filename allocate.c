@@ -133,7 +133,7 @@ int main(int argc, char **argv)
             if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
                 tot_num_fin_proc++;
-                printf("%d,FINISHED,pid=%d,cpu_id=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, cpus[i]->id, tot_num_proc - tot_num_fin_proc);
+                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                 dequeue(cpus[i], cur_time);
             }
             run_process(cpus[i], cur_time);
