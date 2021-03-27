@@ -120,7 +120,7 @@ int main(int argc, char **argv)
             {
                 for (i = 0; i < 2; i++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
+                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], ceil((double)proc_data[nth_proc][2] / 2) + 1, ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3]);
                 }
             }
             nth_proc++;
