@@ -32,7 +32,7 @@ process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char i
 void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void dequeue(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
-void sort_cpus(cpu_t *cpus[], int num_cpus);
+void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
@@ -49,8 +49,6 @@ int main(int argc, char **argv)
     int i;
 
     int cur_time = 0;
-
-    cpu_t *cpus[num_cpus];
 
     while ((option = getopt(argc, argv, "p:f:")) != -1)
     {
@@ -94,6 +92,7 @@ int main(int argc, char **argv)
         }
     }
 
+    cpu_t *cpus[num_cpus];
     for (i = 0; i < num_cpus; i++)
     {
         cpus[i] = init_queue(i);
@@ -105,22 +104,30 @@ int main(int argc, char **argv)
         // add process to queue
         while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
         {
+            int indexes[num_cpus];
+            sort_cpu_idx(cpus, indexes, num_cpus);
             if (proc_data[nth_proc][3] == 'n')
             {
-                sort_cpus(cpus, num_cpus);
-                enqueue(cpus[0], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
-                nth_proc++;
+                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
             }
+            else
+            {
+                for (i = 0; i < 2; i++)
+                {
+                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
+                }
+            }
+            nth_proc++;
         }
 
         // execute process
         for (i = 0; i < num_cpus; i++)
         {
             // check if the head process is finished
-            if (cpus[i]->head->rem_time == 0)
+            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
                 tot_num_fin_proc++;
-                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, tot_num_proc - tot_num_fin_proc);
+                printf("%d,FINISHED,pid=%d,cpu_id=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, cpus[i]->id, tot_num_proc - tot_num_fin_proc);
                 dequeue(cpus[i], cur_time);
             }
             run_process(cpus[i], cur_time);
@@ -245,21 +252,31 @@ int run_process(cpu_t *cpu, int cur_time)
     return 1;
 }
 
-void sort_cpus(cpu_t *cpus[], int num_cpus)
+void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
 {
-    int i, j;
+    int rem_time[num_cpus];
+    int i, j, key1, key2;
+
     for (i = 0; i < num_cpus; i++)
     {
-        for (j = i + 1; j < num_cpus; j++)
+        rem_time[i] = cpus[i]->tot_rem_time;
+        indexes[i] = i;
+    }
+
+    for (i = 1; i < num_cpus; i++)
+    {
+        key1 = rem_time[i];
+        key2 = indexes[i];
+        j = i - 1;
+
+        while (j >= 0 && rem_time[j] > key1)
         {
-            if (cpus[i]->tot_rem_time > cpus[j]->tot_rem_time ||
-                (cpus[i]->tot_rem_time == cpus[j]->tot_rem_time && cpus[i]->id > cpus[j]->id))
-            {
-                cpu_t *temp = cpus[i];
-                cpus[i] = cpus[j];
-                cpus[j] = temp;
-            }
+            rem_time[j + 1] = rem_time[j];
+            indexes[j + 1] = indexes[j];
+            j = j - 1;
         }
+        rem_time[j + 1] = key1;
+        indexes[j + 1] = key2;
     }
 }
 
