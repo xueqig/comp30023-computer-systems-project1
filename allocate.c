@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
 typedef struct process
 {
@@ -21,7 +20,7 @@ typedef struct
     int cur_pid;
     int tot_rem_time;
     int proc_rem;
-    int num_fin_proc;
+    int tot_num_proc;
     int tot_tat;    // total turnaround time
     double max_toh; // max time overhead
     double tot_toh; // total time overhead
@@ -32,26 +31,17 @@ cpu_t *init_queue();
 process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
 void dequeue(cpu_t *cpu, int cur_time);
-int run_process(cpu_t *cpu, int cur_time);
-void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_queue(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
-    int option, num_cpus;
+    int option, proessors;
     FILE *input_file;
     char buff[200];
 
     int proc_data[100][4];
-    int tot_num_proc = 0;
+    int tot_num_proc_data = 0;
     int nth_proc = 0;
-    int tot_num_fin_proc = 0;
-
-    int tot_tat = 0;
-    double tot_toh = 0;
-    double max_toh = 0;
-
-    int i;
 
     int cur_time = 0;
 
@@ -60,7 +50,7 @@ int main(int argc, char **argv)
         switch (option)
         {
         case 'p':
-            num_cpus = atoi(optarg);
+            proessors = atoi(optarg);
             break;
         case 'f':
             if ((input_file = fopen(optarg, "r")))
@@ -79,16 +69,16 @@ int main(int argc, char **argv)
                         // the first three items are number
                         if (num_tokens < 3)
                         {
-                            proc_data[tot_num_proc][num_tokens++] = atoi(token);
+                            proc_data[tot_num_proc_data][num_tokens++] = atoi(token);
                         }
                         // the last item is a char
                         else
                         {
-                            proc_data[tot_num_proc][num_tokens++] = token[0];
+                            proc_data[tot_num_proc_data][num_tokens++] = token[0];
                         }
                         token = strtok(NULL, " ");
                     }
-                    tot_num_proc++;
+                    tot_num_proc_data++;
                 }
                 fclose(input_file);
             }
@@ -97,63 +87,42 @@ int main(int argc, char **argv)
         }
     }
 
-    cpu_t *cpus[num_cpus];
-    for (i = 0; i < num_cpus; i++)
-    {
-        cpus[i] = init_queue(i);
-    }
-
-    // cpu_t *cpu = init_queue(0);
-    while (tot_num_fin_proc < tot_num_proc)
+    cpu_t *cpu = init_queue(0);
+    while (!(nth_proc == tot_num_proc_data && cpu->proc_rem == 0))
     {
         // add process to queue
-        while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
+        while (nth_proc < tot_num_proc_data && proc_data[nth_proc][0] == cur_time)
         {
-            int indexes[num_cpus];
-            // sort cpu indexes based on total remaining time
-            sort_cpu_idx(cpus, indexes, num_cpus);
-            if (proc_data[nth_proc][3] == 'n')
-            {
-                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
-            }
-            else
-            {
-                for (i = 0; i < 2; i++)
-                {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
-                }
-            }
+            enqueue(cpu, proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
             nth_proc++;
         }
 
         // execute process
-        for (i = 0; i < num_cpus; i++)
+        if (cpu->head->rem_time == 0)
         {
-            // check if the head process is finished
-            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
-            {
-                tot_num_fin_proc++;
-                printf("%d,FINISHED,pid=%d,cpu_id=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, cpus[i]->id, tot_num_proc - tot_num_fin_proc);
-                dequeue(cpus[i], cur_time);
-            }
-            run_process(cpus[i], cur_time);
+            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
+            dequeue(cpu, cur_time);
         }
+
+        if (cpu->proc_rem == 0)
+        {
+            break;
+        }
+
+        if (cpu->head->pid != cpu->cur_pid)
+        {
+            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
+            cpu->cur_pid = cpu->head->pid;
+        }
+        cpu->head->rem_time--;
+        cpu->tot_rem_time--;
+
         cur_time++;
     }
 
-    for (i = 0; i < num_cpus; i++)
-    {
-        tot_tat += cpus[i]->tot_tat;
-        tot_toh += cpus[i]->tot_toh;
-        if (cpus[i]->max_toh > max_toh)
-        {
-            max_toh = cpus[i]->max_toh;
-        }
-    }
-
-    printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
-    printf("Time overhead %.2f %.2f\n", max_toh, tot_toh / tot_num_proc);
-    printf("Makespan %d\n", cur_time - 1);
+    printf("Turnaround time %.0f\n", (double)cpu->tot_tat / cpu->tot_num_proc);
+    printf("Time overhead %.2f %.2f\n", cpu->max_toh, (double)cpu->tot_toh / cpu->tot_num_proc);
+    printf("Makespan %d\n", cur_time);
     return 0;
 }
 
@@ -165,7 +134,7 @@ cpu_t *init_queue(int id)
     cpu->cur_pid = -1;
     cpu->tot_rem_time = 0;
     cpu->proc_rem = 0;
-    cpu->num_fin_proc = 0;
+    cpu->tot_num_proc = 0;
     cpu->tot_tat = 0;
     cpu->max_toh = 0;
     cpu->tot_toh = 0;
@@ -232,14 +201,12 @@ void dequeue(cpu_t *cpu, int cur_time)
 
     // if queue is not empty
     cpu->proc_rem--;
-    cpu->num_fin_proc++;
+    cpu->tot_num_proc++;
 
     int tat = cur_time - cpu->head->arr_time;
-    double toh = roundf(((double)tat / cpu->head->exe_time) * 100) / 100;
-
+    double toh = (double)tat / cpu->head->exe_time;
     cpu->tot_tat += tat;
-    cpu->tot_toh += toh;
-
+    cpu->tot_toh += ((double)tat / cpu->head->exe_time);
     if (toh > cpu->max_toh)
     {
         cpu->max_toh = toh;
@@ -250,52 +217,6 @@ void dequeue(cpu_t *cpu, int cur_time)
     cpu->head = cpu->head->next;
 
     free(temp);
-}
-
-int run_process(cpu_t *cpu, int cur_time)
-{
-    if (cpu->proc_rem == 0)
-    {
-        return 0;
-    }
-
-    if (cpu->head->pid != cpu->cur_pid)
-    {
-        printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
-        cpu->cur_pid = cpu->head->pid;
-    }
-    cpu->head->rem_time--;
-    cpu->tot_rem_time--;
-
-    return 1;
-}
-
-void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
-{
-    int rem_time[num_cpus];
-    int i, j, key1, key2;
-
-    for (i = 0; i < num_cpus; i++)
-    {
-        rem_time[i] = cpus[i]->tot_rem_time;
-        indexes[i] = i;
-    }
-
-    for (i = 1; i < num_cpus; i++)
-    {
-        key1 = rem_time[i];
-        key2 = indexes[i];
-        j = i - 1;
-
-        while (j >= 0 && rem_time[j] > key1)
-        {
-            rem_time[j + 1] = rem_time[j];
-            indexes[j + 1] = indexes[j];
-            j = j - 1;
-        }
-        rem_time[j + 1] = key1;
-        indexes[j + 1] = key2;
-    }
 }
 
 void print_queue(cpu_t *cpu)
