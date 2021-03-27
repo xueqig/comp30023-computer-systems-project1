@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 typedef struct process
 {
@@ -45,6 +46,10 @@ int main(int argc, char **argv)
     int tot_num_proc = 0;
     int nth_proc = 0;
     int tot_num_fin_proc = 0;
+
+    int tot_tat = 0;
+    double tot_toh = 0;
+    double max_toh = 0;
 
     int i;
 
@@ -136,9 +141,19 @@ int main(int argc, char **argv)
         cur_time++;
     }
 
-    // printf("Turnaround time %.0f\n", (double)cpu->tot_tat / cpu->tot_num_proc);
-    // printf("Time overhead %.2f %.2f\n", cpu->max_toh, (double)cpu->tot_toh / cpu->tot_num_proc);
-    // printf("Makespan %d\n", cur_time);
+    for (i = 0; i < num_cpus; i++)
+    {
+        tot_tat += cpus[i]->tot_tat;
+        tot_toh += cpus[i]->tot_toh;
+        if (cpus[i]->max_toh > max_toh)
+        {
+            max_toh = cpus[i]->max_toh;
+        }
+    }
+
+    printf("Turnaround time %.f\n", (double)tot_tat / tot_num_proc);
+    printf("Time overhead %.2f %.2f\n", max_toh, tot_toh / tot_num_proc);
+    printf("Makespan %d\n", cur_time - 1);
     return 0;
 }
 
@@ -220,9 +235,11 @@ void dequeue(cpu_t *cpu, int cur_time)
     cpu->num_fin_proc++;
 
     int tat = cur_time - cpu->head->arr_time;
-    double toh = (double)tat / cpu->head->exe_time;
+    double toh = roundf(((double)tat / cpu->head->exe_time) * 100) / 100;
+
     cpu->tot_tat += tat;
-    cpu->tot_toh += ((double)tat / cpu->head->exe_time);
+    cpu->tot_toh += toh;
+
     if (toh > cpu->max_toh)
     {
         cpu->max_toh = toh;
