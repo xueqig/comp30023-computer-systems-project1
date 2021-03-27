@@ -100,8 +100,14 @@ int main(int argc, char **argv)
         // execute process
         if (cpu->head->rem_time == 0)
         {
-            printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpu->head->pid, cpu->proc_rem - 1);
-            dequeue(cpu, cur_time);
+            // check if the head process is finished
+            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+            {
+                tot_num_fin_proc++;
+                printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
+                dequeue(cpus[i], cur_time);
+            }
+            run_process(cpus[i], cur_time);
         }
 
         if (cpu->proc_rem == 0)
