@@ -105,6 +105,7 @@ int main(int argc, char **argv)
         while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
         {
             int indexes[num_cpus];
+            // sort cpu indexes based on total remaining time
             sort_cpu_idx(cpus, indexes, num_cpus);
             if (proc_data[nth_proc][3] == 'n')
             {
