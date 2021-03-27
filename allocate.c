@@ -151,7 +151,7 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("Turnaround time %.f\n", (double)tot_tat / tot_num_proc);
+    printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
     printf("Time overhead %.2f %.2f\n", max_toh, tot_toh / tot_num_proc);
     printf("Makespan %d\n", cur_time - 1);
     return 0;
