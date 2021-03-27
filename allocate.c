@@ -8,6 +8,7 @@ typedef struct process
 {
     int arr_time;
     int pid;
+    double sub_pid;
     int exe_time;
     int rem_time;
     char is_par;
@@ -29,8 +30,8 @@ typedef struct
 } cpu_t;
 
 cpu_t *init_queue();
-process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par);
-void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par);
+process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par);
+void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par);
 void dequeue(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
@@ -114,13 +115,13 @@ int main(int argc, char **argv)
             sort_cpu_idx(cpus, indexes, num_cpus);
             if (proc_data[nth_proc][3] == 'n')
             {
-                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
+                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3]);
             }
             else
             {
                 for (i = 0; i < 2; i++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], ceil((double)proc_data[nth_proc][2] / 2) + 1, ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3]);
+                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), ceil((double)proc_data[nth_proc][2] / 2) + 1, ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3]);
                 }
             }
             nth_proc++;
@@ -172,11 +173,12 @@ cpu_t *init_queue(int id)
     return cpu;
 }
 
-process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char is_par)
+process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par)
 {
     process_t *temp = (process_t *)malloc(sizeof(process_t));
     temp->arr_time = arr_time;
     temp->pid = pid;
+    temp->sub_pid = sub_pid;
     temp->exe_time = exe_time;
     temp->rem_time = rem_time;
     temp->is_par = is_par;
@@ -184,12 +186,12 @@ process_t *new_process(int arr_time, int pid, int exe_time, int rem_time, char i
     return temp;
 }
 
-void enqueue(cpu_t *cpu, int arr_time, int pid, int exe_time, int rem_time, char is_par)
+void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par)
 {
     process_t *start = cpu->head;
 
     // Create a new process
-    process_t *temp = new_process(arr_time, pid, exe_time, rem_time, is_par);
+    process_t *temp = new_process(arr_time, pid, sub_pid, exe_time, rem_time, is_par);
 
     // If queue is empty, then new process is head
     if (cpu->head == NULL)
@@ -261,7 +263,14 @@ int run_process(cpu_t *cpu, int cur_time)
 
     if (cpu->head->pid != cpu->cur_pid)
     {
-        printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
+        if (cpu->head->is_par == 'n')
+        {
+            printf("%d,RUNNING,pid=%d,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->pid, cpu->head->rem_time, cpu->id);
+        }
+        else
+        {
+            printf("%d,RUNNING,pid=%.1f,remaining_time=%d,cpu=%d\n", cur_time, cpu->head->sub_pid, cpu->head->rem_time, cpu->id);
+        }
         cpu->cur_pid = cpu->head->pid;
     }
     cpu->head->rem_time--;
