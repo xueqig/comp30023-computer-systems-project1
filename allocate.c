@@ -107,6 +107,11 @@ int main(int argc, char **argv)
         cpus[i] = init_queue(i);
     }
 
+    for (i = 0; i < 100; i++)
+    {
+        fin_proc_and_sub_proc[i] = -1;
+    }
+
     // cpu_t *cpu = init_queue(0);
     while (tot_num_fin_proc < tot_num_proc)
     {
@@ -192,7 +197,6 @@ int main(int argc, char **argv)
             run_process(cpus[i], cur_time);
         }
         cur_time++;
-        printf("cur_time:%d\n", cur_time);
     }
 
     printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
