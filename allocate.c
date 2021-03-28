@@ -35,6 +35,7 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
 void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void dequeue(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
+void sort_proc_data(int proc_data[][4], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_queue(cpu_t *cpu);
 
@@ -49,7 +50,8 @@ int main(int argc, char **argv)
     int tot_num_proc = 0;
     int tot_num_fin_proc = 0;
     int tot_num_fin_proc_and_sub_proc = 0;
-    int fin_proc_and_sub_proc[100];
+    int fin_proc_and_sub_proc1[100];
+    int fin_proc_and_sub_proc2[100];
 
     int tot_tat = 0;
     double tot_toh = 0;
@@ -101,6 +103,9 @@ int main(int argc, char **argv)
         }
     }
 
+    // sort proc data
+    sort_proc_data(proc_data, tot_num_proc);
+
     cpu_t *cpus[num_cpus];
     for (i = 0; i < num_cpus; i++)
     {
@@ -109,10 +114,10 @@ int main(int argc, char **argv)
 
     for (i = 0; i < 100; i++)
     {
-        fin_proc_and_sub_proc[i] = -1;
+        fin_proc_and_sub_proc1[i] = -1;
+        fin_proc_and_sub_proc2[i] = -1;
     }
 
-    // cpu_t *cpu = init_queue(0);
     while (tot_num_fin_proc < tot_num_proc)
     {
         // add process to queue
@@ -144,17 +149,47 @@ int main(int argc, char **argv)
             nth_proc++;
         }
 
+        // check how many process is finished at current time
+        for (i = 0; i < num_cpus; i++)
+        {
+            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+            {
+                fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+
+                if (cpus[i]->head->is_par == 'n')
+                {
+                    tot_num_fin_proc++;
+                }
+                else
+                {
+                    // check if all subprocesses are finished
+                    int num_fin_sub_proc = 0;
+                    for (j = 0; j < 100; j++)
+                    {
+                        if (fin_proc_and_sub_proc1[j] == cpus[i]->head->pid)
+                        {
+                            num_fin_sub_proc++;
+                        }
+                    }
+                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
+                    {
+                        tot_num_fin_proc++;
+                    }
+                }
+            }
+        }
+
         // execute process
         for (i = 0; i < num_cpus; i++)
         {
             // check if the head process is finished
             if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
-                fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+                fin_proc_and_sub_proc2[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
                 if (cpus[i]->head->is_par == 'n')
                 {
-                    tot_num_fin_proc++;
+                    // tot_num_fin_proc++;
 
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
@@ -169,21 +204,21 @@ int main(int argc, char **argv)
                     }
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                     dequeue(cpus[i], cur_time);
-                    // check if all subprocesses are finished
                 }
                 else
                 {
+                    // check if all subprocesses are finished
                     int num_fin_sub_proc = 0;
                     for (j = 0; j < 100; j++)
                     {
-                        if (fin_proc_and_sub_proc[j] == cpus[i]->head->pid)
+                        if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
                         {
                             num_fin_sub_proc++;
                         }
                     }
                     if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
                     {
-                        tot_num_fin_proc++;
+                        // tot_num_fin_proc++;
                         // update tah, toh and max_toh
                         int tat = cur_time - cpus[i]->head->arr_time;
                         double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
@@ -268,7 +303,7 @@ void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, in
         // Traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
-                (start->next->rem_time == rem_time && start->next->pid > pid)))
+                (start->next->rem_time == rem_time && start->next->pid < pid)))
         {
             start = start->next;
         }
@@ -325,6 +360,34 @@ int run_process(cpu_t *cpu, int cur_time)
     return 1;
 }
 
+void sort_proc_data(int proc_data[][4], int tot_num_proc)
+{
+    int i, j, key_arr_time, key_pid, key_exe_time, key_is_par;
+
+    for (i = 1; i < tot_num_proc; i++)
+    {
+        key_arr_time = proc_data[i][0];
+        key_pid = proc_data[i][1];
+        key_exe_time = proc_data[i][2];
+        key_is_par = proc_data[i][3];
+
+        j = i - 1;
+
+        while (j >= 0 && proc_data[j][0] == key_arr_time && (proc_data[j][2] > key_exe_time || (proc_data[j][2] == key_exe_time && proc_data[j][1] > key_pid)))
+        {
+            proc_data[j + 1][0] = proc_data[j][0];
+            proc_data[j + 1][1] = proc_data[j][1];
+            proc_data[j + 1][2] = proc_data[j][2];
+            proc_data[j + 1][3] = proc_data[j][3];
+            j--;
+        }
+        proc_data[j + 1][0] = key_arr_time;
+        proc_data[j + 1][1] = key_pid;
+        proc_data[j + 1][2] = key_exe_time;
+        proc_data[j + 1][3] = key_is_par;
+    }
+}
+
 void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
 {
     int rem_time[num_cpus];
@@ -346,7 +409,7 @@ void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
         {
             rem_time[j + 1] = rem_time[j];
             indexes[j + 1] = indexes[j];
-            j = j - 1;
+            j--;
         }
         rem_time[j + 1] = key1;
         indexes[j + 1] = key2;
