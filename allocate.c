@@ -124,7 +124,7 @@ int main(int argc, char **argv)
             {
                 for (i = 0; i < 2; i++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), ceil((double)proc_data[nth_proc][2] / 2) + 1, ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3], 2);
+                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3], 2);
                 }
             }
             nth_proc++;
@@ -145,6 +145,8 @@ int main(int argc, char **argv)
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
                     double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
+
+                    printf("pid=%d,tat=%d,toh=%.3f\n", cpus[i]->head->pid, tat, toh);
 
                     tot_tat += tat;
                     tot_toh += toh;
@@ -175,6 +177,8 @@ int main(int argc, char **argv)
                         // update tah, toh and max_toh
                         int tat = cur_time - cpus[i]->head->arr_time;
                         double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
+
+                        printf("pid=%d,tat=%d,toh=%.3f\n", cpus[i]->head->pid, tat, toh);
 
                         tot_tat += tat;
                         tot_toh += toh;
@@ -213,7 +217,7 @@ int main(int argc, char **argv)
     // }
 
     printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
-    printf("Time overhead %.2f %.2f\n", max_toh, tot_toh / tot_num_proc);
+    printf("Time overhead %.2f %.2f\n", max_toh, roundf(tot_toh / tot_num_proc * 100) / 100);
     printf("Makespan %d\n", cur_time - 1);
     return 0;
 }
