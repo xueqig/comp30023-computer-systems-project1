@@ -146,8 +146,6 @@ int main(int argc, char **argv)
                     int tat = cur_time - cpus[i]->head->arr_time;
                     double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
 
-                    printf("pid=%d,tat=%d,toh=%.3f\n", cpus[i]->head->pid, tat, toh);
-
                     tot_tat += tat;
                     tot_toh += toh;
 
@@ -155,8 +153,6 @@ int main(int argc, char **argv)
                     {
                         max_toh = toh;
                     }
-                    // printf("tot_num_fin_proc: %d\n", tot_num_fin_proc);
-                    // printf("tot_num_proc: %d\n", tot_num_proc);
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                     dequeue(cpus[i], cur_time);
                     // check if all subprocesses are finished
@@ -178,8 +174,6 @@ int main(int argc, char **argv)
                         int tat = cur_time - cpus[i]->head->arr_time;
                         double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
 
-                        printf("pid=%d,tat=%d,toh=%.3f\n", cpus[i]->head->pid, tat, toh);
-
                         tot_tat += tat;
                         tot_toh += toh;
 
@@ -187,8 +181,6 @@ int main(int argc, char **argv)
                         {
                             max_toh = toh;
                         }
-                        // printf("tot_num_fin_proc: %d\n", tot_num_fin_proc);
-                        // printf("tot_num_proc: %d\n", tot_num_proc);
                         printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                     }
                     dequeue(cpus[i], cur_time);
@@ -199,22 +191,8 @@ int main(int argc, char **argv)
         {
             run_process(cpus[i], cur_time);
         }
-        // if (cur_time < 70)
-        // {
-        //     printf("cur_time: %d\n", cur_time);
-        // }
         cur_time++;
     }
-
-    // for (i = 0; i < num_cpus; i++)
-    // {
-    //     tot_tat += cpus[i]->tot_tat;
-    //     tot_toh += cpus[i]->tot_toh;
-    //     if (cpus[i]->max_toh > max_toh)
-    //     {
-    //         max_toh = cpus[i]->max_toh;
-    //     }
-    // }
 
     printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
     printf("Time overhead %.2f %.2f\n", max_toh, roundf(tot_toh / tot_num_proc * 100) / 100);
@@ -253,8 +231,6 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
 
 void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
-    // printf("pid=%d add to cpu=%d\n", pid, cpu->id);
-
     process_t *start = cpu->head;
 
     // Create a new process
@@ -303,17 +279,6 @@ void dequeue(cpu_t *cpu, int cur_time)
     cpu->proc_rem--;
     cpu->num_fin_proc++;
 
-    // int tat = cur_time - cpu->head->arr_time;
-    // double toh = roundf(((double)tat / cpu->head->exe_time) * 100) / 100;
-
-    // cpu->tot_tat += tat;
-    // cpu->tot_toh += toh;
-
-    // if (toh > cpu->max_toh)
-    // {
-    //     cpu->max_toh = toh;
-    // }
-
     // Store previous head and move head one node ahead
     process_t *temp = cpu->head;
     cpu->head = cpu->head->next;
@@ -327,11 +292,6 @@ int run_process(cpu_t *cpu, int cur_time)
     {
         return 0;
     }
-
-    // if (cur_time < 70)
-    // {
-    //     printf("run cpu: %d\n", cpu->id);
-    // }
 
     if (cpu->head->pid != cpu->cur_pid)
     {
