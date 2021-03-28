@@ -50,7 +50,8 @@ int main(int argc, char **argv)
     int tot_num_proc = 0;
     int tot_num_fin_proc = 0;
     int tot_num_fin_proc_and_sub_proc = 0;
-    int fin_proc_and_sub_proc[100];
+    int fin_proc_and_sub_proc1[100];
+    int fin_proc_and_sub_proc2[100];
 
     int tot_tat = 0;
     double tot_toh = 0;
@@ -113,7 +114,8 @@ int main(int argc, char **argv)
 
     for (i = 0; i < 100; i++)
     {
-        fin_proc_and_sub_proc[i] = -1;
+        fin_proc_and_sub_proc1[i] = -1;
+        fin_proc_and_sub_proc2[i] = -1;
     }
 
     while (tot_num_fin_proc < tot_num_proc)
@@ -152,7 +154,7 @@ int main(int argc, char **argv)
         {
             if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
-                fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+                fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
                 if (cpus[i]->head->is_par == 'n')
                 {
@@ -164,7 +166,7 @@ int main(int argc, char **argv)
                     int num_fin_sub_proc = 0;
                     for (j = 0; j < 100; j++)
                     {
-                        if (fin_proc_and_sub_proc[j] == cpus[i]->head->pid)
+                        if (fin_proc_and_sub_proc1[j] == cpus[i]->head->pid)
                         {
                             num_fin_sub_proc++;
                         }
@@ -183,7 +185,7 @@ int main(int argc, char **argv)
             // check if the head process is finished
             if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
-                // fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+                fin_proc_and_sub_proc2[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
                 if (cpus[i]->head->is_par == 'n')
                 {
@@ -209,7 +211,7 @@ int main(int argc, char **argv)
                     int num_fin_sub_proc = 0;
                     for (j = 0; j < 100; j++)
                     {
-                        if (fin_proc_and_sub_proc[j] == cpus[i]->head->pid)
+                        if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
                         {
                             num_fin_sub_proc++;
                         }
