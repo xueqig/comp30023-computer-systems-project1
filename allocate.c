@@ -35,6 +35,7 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
 void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void dequeue(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
+void sort_proc_data(int proc_data[][4], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_queue(cpu_t *cpu);
 
@@ -100,6 +101,9 @@ int main(int argc, char **argv)
             break;
         }
     }
+
+    // sort proc data
+    sort_proc_data(proc_data, tot_num_proc);
 
     cpu_t *cpus[num_cpus];
     for (i = 0; i < num_cpus; i++)
@@ -325,6 +329,34 @@ int run_process(cpu_t *cpu, int cur_time)
     return 1;
 }
 
+void sort_proc_data(int proc_data[][4], int tot_num_proc)
+{
+    int i, j, key_arr_time, key_pid, key_exe_time, key_is_par;
+
+    for (i = 1; i < tot_num_proc; i++)
+    {
+        key_arr_time = proc_data[i][0];
+        key_pid = proc_data[i][1];
+        key_exe_time = proc_data[i][2];
+        key_is_par = proc_data[i][3];
+
+        j = i - 1;
+
+        while (j >= 0 && (proc_data[j][2] > key_exe_time || (proc_data[j][2] == key_exe_time && proc_data[j][1] > key_pid)))
+        {
+            proc_data[j + 1][0] = proc_data[j][0];
+            proc_data[j + 1][1] = proc_data[j][1];
+            proc_data[j + 1][2] = proc_data[j][2];
+            proc_data[j + 1][3] = proc_data[j][3];
+            j--;
+        }
+        proc_data[j + 1][0] = key_arr_time;
+        proc_data[j + 1][1] = key_pid;
+        proc_data[j + 1][2] = key_exe_time;
+        proc_data[j + 1][3] = key_is_par;
+    }
+}
+
 void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
 {
     int rem_time[num_cpus];
@@ -346,7 +378,7 @@ void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
         {
             rem_time[j + 1] = rem_time[j];
             indexes[j + 1] = indexes[j];
-            j = j - 1;
+            j--;
         }
         rem_time[j + 1] = key1;
         indexes[j + 1] = key2;
