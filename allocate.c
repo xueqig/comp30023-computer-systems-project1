@@ -116,7 +116,6 @@ int main(int argc, char **argv)
         fin_proc_and_sub_proc[i] = -1;
     }
 
-    // cpu_t *cpu = init_queue(0);
     while (tot_num_fin_proc < tot_num_proc)
     {
         // add process to queue
@@ -173,10 +172,10 @@ int main(int argc, char **argv)
                     }
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                     dequeue(cpus[i], cur_time);
-                    // check if all subprocesses are finished
                 }
                 else
                 {
+                    // check if all subprocesses are finished
                     int num_fin_sub_proc = 0;
                     for (j = 0; j < 100; j++)
                     {
@@ -272,7 +271,7 @@ void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, in
         // Traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
-                (start->next->rem_time == rem_time && start->next->pid > pid)))
+                (start->next->rem_time == rem_time && start->next->pid < pid)))
         {
             start = start->next;
         }
