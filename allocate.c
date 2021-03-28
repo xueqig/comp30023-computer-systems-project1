@@ -192,6 +192,7 @@ int main(int argc, char **argv)
             run_process(cpus[i], cur_time);
         }
         cur_time++;
+        printf("cur_time:%d\n", cur_time);
     }
 
     printf("Turnaround time %.f\n", ceil((double)tot_tat / tot_num_proc));
