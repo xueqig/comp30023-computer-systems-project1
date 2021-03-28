@@ -190,6 +190,9 @@ int main(int argc, char **argv)
                     dequeue(cpus[i], cur_time);
                 }
             }
+        }
+        for (i = 0; i < num_cpus; i++)
+        {
             run_process(cpus[i], cur_time);
         }
         // if (cur_time < 70)
