@@ -342,7 +342,7 @@ void sort_proc_data(int proc_data[][4], int tot_num_proc)
 
         j = i - 1;
 
-        while (j >= 0 && (proc_data[j][2] > key_exe_time || (proc_data[j][2] == key_exe_time && proc_data[j][1] > key_pid)))
+        while (j >= 0 && proc_data[j][0] == key_arr_time && (proc_data[j][2] > key_exe_time || (proc_data[j][2] == key_exe_time && proc_data[j][1] > key_pid)))
         {
             proc_data[j + 1][0] = proc_data[j][0];
             proc_data[j + 1][1] = proc_data[j][1];
