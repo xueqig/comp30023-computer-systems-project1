@@ -147,10 +147,9 @@ int main(int argc, char **argv)
             nth_proc++;
         }
 
-        // execute process
+        // check how many process is finished at current time
         for (i = 0; i < num_cpus; i++)
         {
-            // check if the head process is finished
             if (cpus[i]->head && cpus[i]->head->rem_time == 0)
             {
                 fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
@@ -158,6 +157,37 @@ int main(int argc, char **argv)
                 if (cpus[i]->head->is_par == 'n')
                 {
                     tot_num_fin_proc++;
+                }
+                else
+                {
+                    // check if all subprocesses are finished
+                    int num_fin_sub_proc = 0;
+                    for (j = 0; j < 100; j++)
+                    {
+                        if (fin_proc_and_sub_proc[j] == cpus[i]->head->pid)
+                        {
+                            num_fin_sub_proc++;
+                        }
+                    }
+                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
+                    {
+                        tot_num_fin_proc++;
+                    }
+                }
+            }
+        }
+
+        // execute process
+        for (i = 0; i < num_cpus; i++)
+        {
+            // check if the head process is finished
+            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+            {
+                // fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+
+                if (cpus[i]->head->is_par == 'n')
+                {
+                    // tot_num_fin_proc++;
 
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
@@ -186,7 +216,7 @@ int main(int argc, char **argv)
                     }
                     if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
                     {
-                        tot_num_fin_proc++;
+                        // tot_num_fin_proc++;
                         // update tah, toh and max_toh
                         int tat = cur_time - cpus[i]->head->arr_time;
                         double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
