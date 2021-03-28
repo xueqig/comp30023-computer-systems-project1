@@ -127,9 +127,18 @@ int main(int argc, char **argv)
             }
             else
             {
-                for (i = 0; i < 2; i++)
+                // calculate how many subprocesses
+                int k;
+                for (k = num_cpus; k > 0; k++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / 2) + 1, proc_data[nth_proc][3], 2);
+                    if (proc_data[nth_proc][2] / k >= 1)
+                    {
+                        break;
+                    }
+                }
+                for (i = 0; i < k; i++)
+                {
+                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / k) + 1, proc_data[nth_proc][3], k);
                 }
             }
             nth_proc++;
