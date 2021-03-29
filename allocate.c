@@ -30,7 +30,7 @@ typedef struct
 
 } cpu_t;
 
-cpu_t *init_queue();
+cpu_t *init_cpu();
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void dequeue(cpu_t *cpu, int cur_time);
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     cpu_t *cpus[num_cpus];
     for (i = 0; i < num_cpus; i++)
     {
-        cpus[i] = init_queue(i);
+        cpus[i] = init_cpu(i);
     }
 
     for (i = 0; i < 100; i++)
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-cpu_t *init_queue(int id)
+cpu_t *init_cpu(int id)
 {
     cpu_t *cpu = (cpu_t *)malloc(sizeof(cpu_t));
     cpu->head = NULL;
