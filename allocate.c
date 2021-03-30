@@ -105,12 +105,19 @@ int main(int argc, char **argv)
             {
                 // calculate how many subprocesses
                 int k;
-                for (k = num_cpus; k > 0; k++)
+                if (cust_skd == 0)
                 {
-                    if (proc_data[nth_proc][EXE_TIME_IDX] / k >= 1)
+                    for (k = num_cpus; k > 0; k++)
                     {
-                        break;
+                        if (proc_data[nth_proc][EXE_TIME_IDX] / k >= 1)
+                        {
+                            break;
+                        }
                     }
+                }
+                else
+                {
+                    k = num_cpus;
                 }
                 for (i = 0; i < k; i++)
                 {
