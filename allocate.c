@@ -44,7 +44,7 @@ void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, i
 void rmv_proc(cpu_t *cpu, int cur_time);
 int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time);
 int run_process(cpu_t *cpu, int cur_time);
-int check_proc_fin(int fin_proc_and_sub_proc1[], int pid, int num_sub_proc, char is_par);
+int check_proc_fin(int fin_proc_and_sub_proc[], int pid, int num_sub_proc, char is_par);
 void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_cpu(cpu_t *cpu);
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
             {
                 fin_proc_and_sub_proc2[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
-                if (cpus[i]->head->is_par == 'n')
+                if (check_proc_fin(fin_proc_and_sub_proc2, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
                 {
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
@@ -151,36 +151,54 @@ int main(int argc, char **argv)
                         max_toh = toh;
                     }
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                    rmv_proc(cpus[i], cur_time);
                 }
-                else
-                {
-                    // check if all subprocesses are finished
-                    int num_fin_sub_proc = 0;
-                    for (j = 0; j < NUM_PROC; j++)
-                    {
-                        if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
-                        {
-                            num_fin_sub_proc++;
-                        }
-                    }
-                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
-                    {
-                        // update tah, toh and max_toh
-                        int tat = cur_time - cpus[i]->head->arr_time;
-                        double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
 
-                        tot_tat += tat;
-                        tot_toh += toh;
+                rmv_proc(cpus[i], cur_time);
 
-                        if (toh > max_toh)
-                        {
-                            max_toh = toh;
-                        }
-                        printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                    }
-                    rmv_proc(cpus[i], cur_time);
-                }
+                // if (cpus[i]->head->is_par == 'n')
+                // {
+                //     // update tah, toh and max_toh
+                //     int tat = cur_time - cpus[i]->head->arr_time;
+                //     double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
+
+                //     tot_tat += tat;
+                //     tot_toh += toh;
+
+                //     if (toh > max_toh)
+                //     {
+                //         max_toh = toh;
+                //     }
+                //     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
+                //     rmv_proc(cpus[i], cur_time);
+                //     }
+                //     else
+                //     {
+                //         // check if all subprocesses are finished
+                //         int num_fin_sub_proc = 0;
+                //         for (j = 0; j < NUM_PROC; j++)
+                //         {
+                //             if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
+                //             {
+                //                 num_fin_sub_proc++;
+                //             }
+                //         }
+                //         if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
+                //         {
+                //             // update tah, toh and max_toh
+                //             int tat = cur_time - cpus[i]->head->arr_time;
+                //             double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
+
+                //             tot_tat += tat;
+                //             tot_toh += toh;
+
+                //             if (toh > max_toh)
+                //             {
+                //                 max_toh = toh;
+                //             }
+                //             printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
+                //         }
+                //         rmv_proc(cpus[i], cur_time);
+                //     }
             }
         }
         for (i = 0; i < num_cpus; i++)
@@ -372,7 +390,7 @@ int run_process(cpu_t *cpu, int cur_time)
 }
 
 /* check if process is finished */
-int check_proc_fin(int fin_proc_and_sub_proc1[], int pid, int num_sub_proc, char is_par)
+int check_proc_fin(int fin_proc_and_sub_proc[], int pid, int num_sub_proc, char is_par)
 {
     if (is_par == 'n')
     {
@@ -384,7 +402,7 @@ int check_proc_fin(int fin_proc_and_sub_proc1[], int pid, int num_sub_proc, char
 
     for (i = 0; i < NUM_PROC; i++)
     {
-        if (fin_proc_and_sub_proc1[i] == pid)
+        if (fin_proc_and_sub_proc[i] == pid)
         {
             num_fin_sub_proc++;
         }
