@@ -30,10 +30,9 @@ typedef struct
     int tot_rem_time;
     int proc_rem;
     int num_fin_proc;
-    int tot_tat;    // total turnaround time
-    double max_toh; // max time overhead
-    double tot_toh; // total time overhead
-
+    int tot_tat;
+    double max_toh;
+    double tot_toh;
 } cpu_t;
 
 int read_input_file(int proc_data[][NUM_DATA_TYEP]);
