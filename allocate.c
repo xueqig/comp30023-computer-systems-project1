@@ -9,6 +9,8 @@
 #define PID_IDX 1
 #define EXE_TIME_IDX 2
 #define IS_PAR_IDX 3
+#define NUM_PROC 1000
+#define BUF_LEN 100
 
 typedef struct process
 {
@@ -50,8 +52,8 @@ int main(int argc, char **argv)
     int option, num_cpus, i, j;
     int cust_skd = 0, tot_tat = 0, cur_time = 0;
     int nth_proc = 0, tot_num_proc = 0, tot_num_fin_proc = 0, tot_num_fin_proc_and_sub_proc = 0;
-    int fin_proc_and_sub_proc1[100], fin_proc_and_sub_proc2[100];
-    int proc_data[100][NUM_DATA_TYEP];
+    int fin_proc_and_sub_proc1[NUM_PROC], fin_proc_and_sub_proc2[NUM_PROC];
+    int proc_data[NUM_PROC][NUM_DATA_TYEP];
     double tot_toh = 0, max_toh = 0;
 
     while ((option = getopt(argc, argv, "p:f:c:")) != -1)
@@ -81,7 +83,7 @@ int main(int argc, char **argv)
         cpus[i] = init_cpu(i);
     }
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < NUM_PROC; i++)
     {
         fin_proc_and_sub_proc1[i] = -1;
         fin_proc_and_sub_proc2[i] = -1;
@@ -133,7 +135,7 @@ int main(int argc, char **argv)
                 {
                     // check if all subprocesses are finished
                     int num_fin_sub_proc = 0;
-                    for (j = 0; j < 100; j++)
+                    for (j = 0; j < NUM_PROC; j++)
                     {
                         if (fin_proc_and_sub_proc1[j] == cpus[i]->head->pid)
                         {
@@ -176,7 +178,7 @@ int main(int argc, char **argv)
                 {
                     // check if all subprocesses are finished
                     int num_fin_sub_proc = 0;
-                    for (j = 0; j < 100; j++)
+                    for (j = 0; j < NUM_PROC; j++)
                     {
                         if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
                         {
@@ -219,7 +221,7 @@ int main(int argc, char **argv)
 int read_input_file(int proc_data[][NUM_DATA_TYEP])
 {
     FILE *input_file;
-    char buff[100];
+    char buff[BUF_LEN];
     int tot_num_proc = 0;
 
     if ((input_file = fopen(optarg, "r")))
