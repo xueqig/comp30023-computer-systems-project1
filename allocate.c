@@ -1,3 +1,8 @@
+/* 
+COMP30023 Project 1. 
+The program is a simulator that allocates CPU to the running processes.
+The program is written by Xueqi Guan, studentID: 1098403. 
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
