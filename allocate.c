@@ -48,25 +48,12 @@ void print_cpu(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
-    int option, num_cpus;
-
-    int cust_skd = 0;
-
+    int option, num_cpus, i, j;
+    int cust_skd = 0, tot_tat = 0, cur_time = 0;
+    int nth_proc = 0, tot_num_proc = 0, tot_num_fin_proc = 0, tot_num_fin_proc_and_sub_proc = 0;
+    int fin_proc_and_sub_proc1[100], fin_proc_and_sub_proc2[100];
     int proc_data[100][NUM_DATA_TYEP];
-    int nth_proc = 0;
-    int tot_num_proc = 0;
-    int tot_num_fin_proc = 0;
-    int tot_num_fin_proc_and_sub_proc = 0;
-    int fin_proc_and_sub_proc1[100];
-    int fin_proc_and_sub_proc2[100];
-
-    int tot_tat = 0;
-    double tot_toh = 0;
-    double max_toh = 0;
-
-    int i, j;
-
-    int cur_time = 0;
+    double tot_toh = 0, max_toh = 0;
 
     while ((option = getopt(argc, argv, "p:f:c:")) != -1)
     {
