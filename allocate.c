@@ -43,6 +43,7 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
 void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void rmv_proc(cpu_t *cpu, int cur_time);
 int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time);
+int cal_num_fin_proc(int num_cpus, cpu_t *cpus[], int fin_proc_and_sub_proc[], int tot_num_fin_proc_and_sub_proc);
 int run_process(cpu_t *cpu, int cur_time);
 int check_proc_fin(int fin_proc_and_sub_proc[], int pid, int num_sub_proc, char is_par);
 void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
@@ -116,18 +117,20 @@ int main(int argc, char **argv)
         }
 
         // check how many process is finished at current time
-        for (i = 0; i < num_cpus; i++)
-        {
-            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
-            {
-                fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+        tot_num_fin_proc += cal_num_fin_proc(num_cpus, cpus, fin_proc_and_sub_proc1, tot_num_fin_proc_and_sub_proc);
 
-                if (check_proc_fin(fin_proc_and_sub_proc1, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
-                {
-                    tot_num_fin_proc++;
-                }
-            }
-        }
+        //     for (i = 0; i < num_cpus; i++)
+        // {
+        //     if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+        //     {
+        //         fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+
+        //         if (check_proc_fin(fin_proc_and_sub_proc1, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
+        //         {
+        //             tot_num_fin_proc++;
+        //         }
+        //     }
+        // }
 
         // execute process
         for (i = 0; i < num_cpus; i++)
@@ -316,6 +319,25 @@ int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time)
         k = num_cpus;
     }
     return k;
+}
+
+int cal_num_fin_proc(int num_cpus, cpu_t *cpus[], int fin_proc_and_sub_proc[], int tot_num_fin_proc_and_sub_proc)
+{
+    int i, num_fin_proc = 0;
+
+    for (i = 0; i < num_cpus; i++)
+    {
+        if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+        {
+            fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+
+            if (check_proc_fin(fin_proc_and_sub_proc, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
+            {
+                num_fin_proc++;
+            }
+        }
+    }
+    return num_fin_proc;
 }
 
 /* execute process and print execution message */
