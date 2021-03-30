@@ -42,6 +42,7 @@ cpu_t *init_cpu();
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void rmv_proc(cpu_t *cpu, int cur_time);
+int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time);
 int run_process(cpu_t *cpu, int cur_time);
 void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
@@ -104,21 +105,7 @@ int main(int argc, char **argv)
             else
             {
                 // calculate how many subprocesses
-                int k;
-                if (cust_skd == 0)
-                {
-                    for (k = num_cpus; k > 0; k++)
-                    {
-                        if (proc_data[nth_proc][EXE_TIME_IDX] / k >= 1)
-                        {
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    k = num_cpus;
-                }
+                int k = cal_num_sub_proc(cust_skd, num_cpus, proc_data[nth_proc][EXE_TIME_IDX]);
                 for (i = 0; i < k; i++)
                 {
                     add_proc(cpus[indexes[i]], proc_data[nth_proc][ARR_TIME_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][PID_IDX] + (i * 0.1), proc_data[nth_proc][EXE_TIME_IDX], ceil((double)proc_data[nth_proc][EXE_TIME_IDX] / k) + 1, proc_data[nth_proc][IS_PAR_IDX], k);
@@ -351,6 +338,26 @@ void rmv_proc(cpu_t *cpu, int cur_time)
     cpu->head = cpu->head->next;
 
     free(temp);
+}
+
+int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time)
+{
+    int k;
+    if (cust_skd == 0)
+    {
+        for (k = num_cpus; k > 0; k++)
+        {
+            if (exe_time / k >= 1)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        k = num_cpus;
+    }
+    return k;
 }
 
 /* execute process and print execution message */
