@@ -7,7 +7,7 @@
 #define NUM_DATA_TYEP 4
 #define ARR_TIME_IDX 0
 #define PID_IDX 1
-#define EXE_TEIM_IDX 2
+#define EXE_TIME_IDX 2
 #define IS_PAR_IDX 3
 
 typedef struct process
@@ -50,6 +50,8 @@ int main(int argc, char **argv)
 {
     int option, num_cpus;
 
+    int cust_skd = 0;
+
     int proc_data[100][NUM_DATA_TYEP];
     int nth_proc = 0;
     int tot_num_proc = 0;
@@ -66,7 +68,7 @@ int main(int argc, char **argv)
 
     int cur_time = 0;
 
-    while ((option = getopt(argc, argv, "p:f:")) != -1)
+    while ((option = getopt(argc, argv, "p:f:c:")) != -1)
     {
         switch (option)
         {
@@ -74,37 +76,11 @@ int main(int argc, char **argv)
             num_cpus = atoi(optarg);
             break;
         case 'f':
-            // read input file
+            // read input file and store processes data in proc_data
             tot_num_proc = read_input_file(proc_data);
-        // if ((input_file = fopen(optarg, "r")))
-        // {
-        //     // read input file and store processes data in proc_data
-        //     while (fgets(buff, 200, (FILE *)input_file))
-        //     {
-        //         char *token;
-        //         int num_tokens = 0;
-
-        //         // breaks the string str into multiple tokens using space
-        //         token = strtok(buff, " ");
-
-        //         while (token != NULL)
-        //         {
-        //             // the first three items are number
-        //             if (num_tokens < 3)
-        //             {
-        //                 proc_data[tot_num_proc][num_tokens++] = atoi(token);
-        //             }
-        //             // the last item is a char
-        //             else
-        //             {
-        //                 proc_data[tot_num_proc][num_tokens++] = token[0];
-        //             }
-        //             token = strtok(NULL, " ");
-        //         }
-        //         tot_num_proc++;
-        //     }
-        //     fclose(input_file);
-        // }
+        case 'c':
+            // implement customised schedule if -c flag is provided
+            cust_skd = 1;
         default:
             break;
         }
@@ -128,14 +104,14 @@ int main(int argc, char **argv)
     while (tot_num_fin_proc < tot_num_proc)
     {
         // add process to queue
-        while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
+        while (nth_proc < tot_num_proc && proc_data[nth_proc][ARR_TIME_IDX] == cur_time)
         {
             int indexes[num_cpus];
             // sort cpu indexes based on total remaining time
             sort_cpu_idx(cpus, indexes, num_cpus);
-            if (proc_data[nth_proc][3] == 'n')
+            if (proc_data[nth_proc][IS_PAR_IDX] == 'n')
             {
-                add_proc(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3], 0);
+                add_proc(cpus[indexes[0]], proc_data[nth_proc][ARR_TIME_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][EXE_TIME_IDX], proc_data[nth_proc][EXE_TIME_IDX], proc_data[nth_proc][IS_PAR_IDX], 0);
             }
             else
             {
@@ -143,14 +119,14 @@ int main(int argc, char **argv)
                 int k;
                 for (k = num_cpus; k > 0; k++)
                 {
-                    if (proc_data[nth_proc][2] / k >= 1)
+                    if (proc_data[nth_proc][EXE_TIME_IDX] / k >= 1)
                     {
                         break;
                     }
                 }
                 for (i = 0; i < k; i++)
                 {
-                    add_proc(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / k) + 1, proc_data[nth_proc][3], k);
+                    add_proc(cpus[indexes[i]], proc_data[nth_proc][ARR_TIME_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][PID_IDX] + (i * 0.1), proc_data[nth_proc][EXE_TIME_IDX], ceil((double)proc_data[nth_proc][EXE_TIME_IDX] / k) + 1, proc_data[nth_proc][IS_PAR_IDX], k);
                 }
             }
             nth_proc++;
