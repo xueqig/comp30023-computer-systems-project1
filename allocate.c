@@ -1,8 +1,21 @@
+/* 
+COMP30023 Project 1. 
+The program is a simulator that allocates CPU to the running processes.
+The program is written by Xueqi Guan, studentID: 1098403. 
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+
+#define NUM_DATA_TYEP 4
+#define ARR_TIME_IDX 0
+#define PID_IDX 1
+#define EXE_TIME_IDX 2
+#define IS_PAR_IDX 3
+#define NUM_PROC 1000
+#define BUF_LEN 100
 
 typedef struct process
 {
@@ -24,44 +37,34 @@ typedef struct
     int tot_rem_time;
     int proc_rem;
     int num_fin_proc;
-    int tot_tat;    // total turnaround time
-    double max_toh; // max time overhead
-    double tot_toh; // total time overhead
-
+    int tot_tat;
+    double max_toh;
+    double tot_toh;
 } cpu_t;
 
-cpu_t *init_queue();
+int read_input_file(int proc_data[][NUM_DATA_TYEP]);
+cpu_t *init_cpu();
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
-void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
-void dequeue(cpu_t *cpu, int cur_time);
+void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
+void rmv_proc(cpu_t *cpu, int cur_time);
+int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time);
+int cal_num_fin_proc(int num_cpus, cpu_t *cpus[], int fin_proc_and_sub_proc[], int tot_num_fin_proc_and_sub_proc);
 int run_process(cpu_t *cpu, int cur_time);
-void sort_proc_data(int proc_data[][4], int tot_num_proc);
+int check_proc_fin(int fin_proc_and_sub_proc[], int pid, int num_sub_proc, char is_par);
+void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
-void print_queue(cpu_t *cpu);
+void print_cpu(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
-    int option, num_cpus;
-    FILE *input_file;
-    char buff[200];
+    int option, num_cpus, i, j;
+    int cust_skd = 0, tot_tat = 0, cur_time = 0;
+    int nth_proc = 0, tot_num_proc = 0, tot_num_fin_proc = 0, tot_num_fin_proc_and_sub_proc = 0;
+    int fin_proc_and_sub_proc1[NUM_PROC], fin_proc_and_sub_proc2[NUM_PROC];
+    int proc_data[NUM_PROC][NUM_DATA_TYEP];
+    double tot_toh = 0, max_toh = 0;
 
-    int proc_data[100][4];
-    int nth_proc = 0;
-    int tot_num_proc = 0;
-    int tot_num_fin_proc = 0;
-    int tot_num_fin_proc_and_sub_proc = 0;
-    int fin_proc_and_sub_proc1[100];
-    int fin_proc_and_sub_proc2[100];
-
-    int tot_tat = 0;
-    double tot_toh = 0;
-    double max_toh = 0;
-
-    int i, j;
-
-    int cur_time = 0;
-
-    while ((option = getopt(argc, argv, "p:f:")) != -1)
+    while ((option = getopt(argc, argv, "p:f:c:")) != -1)
     {
         switch (option)
         {
@@ -69,35 +72,11 @@ int main(int argc, char **argv)
             num_cpus = atoi(optarg);
             break;
         case 'f':
-            if ((input_file = fopen(optarg, "r")))
-            {
-                // read input file and store processes data in proc_data
-                while (fgets(buff, 200, (FILE *)input_file))
-                {
-                    char *token;
-                    int num_tokens = 0;
-
-                    // breaks the string str into multiple tokens using space
-                    token = strtok(buff, " ");
-
-                    while (token != NULL)
-                    {
-                        // the first three items are number
-                        if (num_tokens < 3)
-                        {
-                            proc_data[tot_num_proc][num_tokens++] = atoi(token);
-                        }
-                        // the last item is a char
-                        else
-                        {
-                            proc_data[tot_num_proc][num_tokens++] = token[0];
-                        }
-                        token = strtok(NULL, " ");
-                    }
-                    tot_num_proc++;
-                }
-                fclose(input_file);
-            }
+            // read input file and store processes data in proc_data
+            tot_num_proc = read_input_file(proc_data);
+        case 'c':
+            // implement customised schedule if -c flag is provided
+            cust_skd = 1;
         default:
             break;
         }
@@ -109,10 +88,10 @@ int main(int argc, char **argv)
     cpu_t *cpus[num_cpus];
     for (i = 0; i < num_cpus; i++)
     {
-        cpus[i] = init_queue(i);
+        cpus[i] = init_cpu(i);
     }
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < NUM_PROC; i++)
     {
         fin_proc_and_sub_proc1[i] = -1;
         fin_proc_and_sub_proc2[i] = -1;
@@ -120,64 +99,30 @@ int main(int argc, char **argv)
 
     while (tot_num_fin_proc < tot_num_proc)
     {
-        // add process to queue
-        while (nth_proc < tot_num_proc && proc_data[nth_proc][0] == cur_time)
+        // add process to cpu
+        while (nth_proc < tot_num_proc && proc_data[nth_proc][ARR_TIME_IDX] == cur_time)
         {
             int indexes[num_cpus];
             // sort cpu indexes based on total remaining time
             sort_cpu_idx(cpus, indexes, num_cpus);
-            if (proc_data[nth_proc][3] == 'n')
+            if (proc_data[nth_proc][IS_PAR_IDX] == 'n')
             {
-                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3], 0);
+                add_proc(cpus[indexes[0]], proc_data[nth_proc][ARR_TIME_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][EXE_TIME_IDX], proc_data[nth_proc][EXE_TIME_IDX], proc_data[nth_proc][IS_PAR_IDX], 0);
             }
             else
             {
                 // calculate how many subprocesses
-                int k;
-                for (k = num_cpus; k > 0; k++)
-                {
-                    if (proc_data[nth_proc][2] / k >= 1)
-                    {
-                        break;
-                    }
-                }
+                int k = cal_num_sub_proc(cust_skd, num_cpus, proc_data[nth_proc][EXE_TIME_IDX]);
                 for (i = 0; i < k; i++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / k) + 1, proc_data[nth_proc][3], k);
+                    add_proc(cpus[indexes[i]], proc_data[nth_proc][ARR_TIME_IDX], proc_data[nth_proc][PID_IDX], proc_data[nth_proc][PID_IDX] + (i * 0.1), proc_data[nth_proc][EXE_TIME_IDX], ceil((double)proc_data[nth_proc][EXE_TIME_IDX] / k) + 1, proc_data[nth_proc][IS_PAR_IDX], k);
                 }
             }
             nth_proc++;
         }
 
-        // check how many process is finished at current time
-        for (i = 0; i < num_cpus; i++)
-        {
-            if (cpus[i]->head && cpus[i]->head->rem_time == 0)
-            {
-                fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
-
-                if (cpus[i]->head->is_par == 'n')
-                {
-                    tot_num_fin_proc++;
-                }
-                else
-                {
-                    // check if all subprocesses are finished
-                    int num_fin_sub_proc = 0;
-                    for (j = 0; j < 100; j++)
-                    {
-                        if (fin_proc_and_sub_proc1[j] == cpus[i]->head->pid)
-                        {
-                            num_fin_sub_proc++;
-                        }
-                    }
-                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
-                    {
-                        tot_num_fin_proc++;
-                    }
-                }
-            }
-        }
+        // update total number of finished processes
+        tot_num_fin_proc += cal_num_fin_proc(num_cpus, cpus, fin_proc_and_sub_proc1, tot_num_fin_proc_and_sub_proc);
 
         // execute process
         for (i = 0; i < num_cpus; i++)
@@ -187,10 +132,8 @@ int main(int argc, char **argv)
             {
                 fin_proc_and_sub_proc2[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
-                if (cpus[i]->head->is_par == 'n')
+                if (check_proc_fin(fin_proc_and_sub_proc2, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
                 {
-                    // tot_num_fin_proc++;
-
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
                     double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
@@ -203,39 +146,12 @@ int main(int argc, char **argv)
                         max_toh = toh;
                     }
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                    dequeue(cpus[i], cur_time);
                 }
-                else
-                {
-                    // check if all subprocesses are finished
-                    int num_fin_sub_proc = 0;
-                    for (j = 0; j < 100; j++)
-                    {
-                        if (fin_proc_and_sub_proc2[j] == cpus[i]->head->pid)
-                        {
-                            num_fin_sub_proc++;
-                        }
-                    }
-                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
-                    {
-                        // tot_num_fin_proc++;
-                        // update tah, toh and max_toh
-                        int tat = cur_time - cpus[i]->head->arr_time;
-                        double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
 
-                        tot_tat += tat;
-                        tot_toh += toh;
-
-                        if (toh > max_toh)
-                        {
-                            max_toh = toh;
-                        }
-                        printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                    }
-                    dequeue(cpus[i], cur_time);
-                }
+                rmv_proc(cpus[i], cur_time);
             }
         }
+
         for (i = 0; i < num_cpus; i++)
         {
             run_process(cpus[i], cur_time);
@@ -249,7 +165,47 @@ int main(int argc, char **argv)
     return 0;
 }
 
-cpu_t *init_queue(int id)
+/* read input file and return the total number of processes */
+int read_input_file(int proc_data[][NUM_DATA_TYEP])
+{
+    FILE *input_file;
+    char buff[BUF_LEN];
+    int tot_num_proc = 0;
+
+    if ((input_file = fopen(optarg, "r")))
+    {
+        // read input file and store processes data in proc_data
+        while (fgets(buff, 200, (FILE *)input_file))
+        {
+            char *token;
+            int num_tokens = 0;
+
+            // breaks the string str into multiple tokens using space
+            token = strtok(buff, " ");
+
+            while (token != NULL)
+            {
+                // the first three items are number
+                if (num_tokens < 3)
+                {
+                    proc_data[tot_num_proc][num_tokens++] = atoi(token);
+                }
+                // the last item is a char
+                else
+                {
+                    proc_data[tot_num_proc][num_tokens++] = token[0];
+                }
+                token = strtok(NULL, " ");
+            }
+            tot_num_proc++;
+        }
+        fclose(input_file);
+    }
+    return tot_num_proc;
+}
+
+/* initialise cpu */
+cpu_t *init_cpu(int id)
 {
     cpu_t *cpu = (cpu_t *)malloc(sizeof(cpu_t));
     cpu->head = NULL;
@@ -264,6 +220,7 @@ cpu_t *init_queue(int id)
     return cpu;
 }
 
+/* create a new process */
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
     process_t *temp = (process_t *)malloc(sizeof(process_t));
@@ -278,29 +235,30 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
     return temp;
 }
 
-void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
+/* add process to cpu */
+void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
     process_t *start = cpu->head;
 
-    // Create a new process
+    // create a new process
     process_t *temp = new_process(arr_time, pid, sub_pid, exe_time, rem_time, is_par, num_sub_proc);
 
-    // If queue is empty, then new process is head
+    // if cpu is empty, then new process is head
     if (cpu->head == NULL)
     {
         cpu->head = temp;
     }
-    // The head has greater rem_time than new process.
-    // So insert new process before head process and change head process.
+    // the head has greater rem_time than new process
+    // so insert new process before head process and change head process
     else if (cpu->head->rem_time > rem_time || (cpu->head->rem_time == rem_time && cpu->head->pid > pid))
     {
-        // Insert New process before head
+        // insert new process before head
         temp->next = cpu->head;
         cpu->head = temp;
     }
     else
     {
-        // Traverse the list and find a position to insert new process
+        // traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
                 (start->next->rem_time == rem_time && start->next->pid < pid)))
@@ -308,7 +266,7 @@ void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, in
             start = start->next;
         }
 
-        // Either at the ends of the list or at required position
+        // either at the ends of the list or at required position
         temp->next = start->next;
         start->next = temp;
     }
@@ -316,25 +274,68 @@ void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, in
     cpu->proc_rem++;
 }
 
-void dequeue(cpu_t *cpu, int cur_time)
+/* remove process from cpu */
+void rmv_proc(cpu_t *cpu, int cur_time)
 {
-    // If queue is empty, return
+    // if cpu is empty, return
     if (cpu->head == NULL)
     {
         return;
     }
 
-    // if queue is not empty
+    // if cpu is not empty
     cpu->proc_rem--;
     cpu->num_fin_proc++;
 
-    // Store previous head and move head one node ahead
+    // store previous head and move head one node ahead
     process_t *temp = cpu->head;
     cpu->head = cpu->head->next;
 
     free(temp);
 }
 
+/* calculate number of subprocesses */
+int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time)
+{
+    int k;
+    if (cust_skd == 0)
+    {
+        for (k = num_cpus; k > 0; k++)
+        {
+            if (exe_time / k >= 1)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        k = num_cpus;
+    }
+    return k;
+}
+
+/* calculate number of finished processes */
+int cal_num_fin_proc(int num_cpus, cpu_t *cpus[], int fin_proc_and_sub_proc[], int tot_num_fin_proc_and_sub_proc)
+{
+    int i, num_fin_proc = 0;
+
+    for (i = 0; i < num_cpus; i++)
+    {
+        if (cpus[i]->head && cpus[i]->head->rem_time == 0)
+        {
+            fin_proc_and_sub_proc[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
+
+            if (check_proc_fin(fin_proc_and_sub_proc, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
+            {
+                num_fin_proc++;
+            }
+        }
+    }
+    return num_fin_proc;
+}
+
+/* execute process and print execution message */
 int run_process(cpu_t *cpu, int cur_time)
 {
     if (cpu->proc_rem == 0)
@@ -360,7 +361,34 @@ int run_process(cpu_t *cpu, int cur_time)
     return 1;
 }
 
-void sort_proc_data(int proc_data[][4], int tot_num_proc)
+/* check if process is finished */
+int check_proc_fin(int fin_proc_and_sub_proc[], int pid, int num_sub_proc, char is_par)
+{
+    if (is_par == 'n')
+    {
+        return 1;
+    }
+
+    // if process is parallelisable, need to check if all subprocesses are finished
+    int num_fin_sub_proc = 0, i = 0;
+
+    for (i = 0; i < NUM_PROC; i++)
+    {
+        if (fin_proc_and_sub_proc[i] == pid)
+        {
+            num_fin_sub_proc++;
+        }
+    }
+
+    if (num_fin_sub_proc == num_sub_proc)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+/* sort process data based on execution time and process id */
+void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc)
 {
     int i, j, key_arr_time, key_pid, key_exe_time, key_is_par;
 
@@ -388,6 +416,7 @@ void sort_proc_data(int proc_data[][4], int tot_num_proc)
     }
 }
 
+/* sort cpu based on time left to complete all processes */
 void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
 {
     int rem_time[num_cpus];
@@ -416,13 +445,14 @@ void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
     }
 }
 
-void print_queue(cpu_t *cpu)
+/* print out cpu data */
+void print_cpu(cpu_t *cpu)
 {
     process_t *start = cpu->head;
 
     if (cpu->head == NULL)
     {
-        printf("queue is empty\n");
+        printf("cpu is empty\n");
         return;
     }
 
