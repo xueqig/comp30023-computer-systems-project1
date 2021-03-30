@@ -42,7 +42,7 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
 void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void rmv_proc(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
-void sort_proc_data(int proc_data[][4], int tot_num_proc);
+void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_cpu(cpu_t *cpu);
 
@@ -385,7 +385,7 @@ int run_process(cpu_t *cpu, int cur_time)
 }
 
 /* sort process data based on execution time and process id */
-void sort_proc_data(int proc_data[][4], int tot_num_proc)
+void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc)
 {
     int i, j, key_arr_time, key_pid, key_exe_time, key_is_par;
 
