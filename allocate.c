@@ -178,8 +178,8 @@ int main(int argc, char **argv)
                             max_toh = toh;
                         }
                         printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                        rmv_proc(cpus[i], cur_time);
                     }
+                    rmv_proc(cpus[i], cur_time);
                 }
             }
         }
