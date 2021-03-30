@@ -116,21 +116,8 @@ int main(int argc, char **argv)
             nth_proc++;
         }
 
-        // check how many process is finished at current time
+        // update total number of finished processes
         tot_num_fin_proc += cal_num_fin_proc(num_cpus, cpus, fin_proc_and_sub_proc1, tot_num_fin_proc_and_sub_proc);
-
-        //     for (i = 0; i < num_cpus; i++)
-        // {
-        //     if (cpus[i]->head && cpus[i]->head->rem_time == 0)
-        //     {
-        //         fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
-
-        //         if (check_proc_fin(fin_proc_and_sub_proc1, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
-        //         {
-        //             tot_num_fin_proc++;
-        //         }
-        //     }
-        // }
 
         // execute process
         for (i = 0; i < num_cpus; i++)
@@ -159,6 +146,7 @@ int main(int argc, char **argv)
                 rmv_proc(cpus[i], cur_time);
             }
         }
+
         for (i = 0; i < num_cpus; i++)
         {
             run_process(cpus[i], cur_time);
@@ -301,6 +289,7 @@ void rmv_proc(cpu_t *cpu, int cur_time)
     free(temp);
 }
 
+/* calculate number of subprocesses */
 int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time)
 {
     int k;
@@ -321,6 +310,7 @@ int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time)
     return k;
 }
 
+/* calculate number of finished processes */
 int cal_num_fin_proc(int num_cpus, cpu_t *cpus[], int fin_proc_and_sub_proc[], int tot_num_fin_proc_and_sub_proc)
 {
     int i, num_fin_proc = 0;
