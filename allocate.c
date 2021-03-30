@@ -32,8 +32,8 @@ typedef struct
 
 cpu_t *init_cpu();
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
-void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
-void dequeue(cpu_t *cpu, int cur_time);
+void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
+void rmv_proc(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
 void sort_proc_data(int proc_data[][4], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
             sort_cpu_idx(cpus, indexes, num_cpus);
             if (proc_data[nth_proc][3] == 'n')
             {
-                enqueue(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3], 0);
+                add_proc(cpus[indexes[0]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1], proc_data[nth_proc][2], proc_data[nth_proc][2], proc_data[nth_proc][3], 0);
             }
             else
             {
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
                 }
                 for (i = 0; i < k; i++)
                 {
-                    enqueue(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / k) + 1, proc_data[nth_proc][3], k);
+                    add_proc(cpus[indexes[i]], proc_data[nth_proc][0], proc_data[nth_proc][1], proc_data[nth_proc][1] + (i * 0.1), proc_data[nth_proc][2], ceil((double)proc_data[nth_proc][2] / k) + 1, proc_data[nth_proc][3], k);
                 }
             }
             nth_proc++;
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
                         max_toh = toh;
                     }
                     printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
-                    dequeue(cpus[i], cur_time);
+                    rmv_proc(cpus[i], cur_time);
                 }
                 else
                 {
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
                         }
                         printf("%d,FINISHED,pid=%d,proc_remaining=%d\n", cur_time, cpus[i]->head->pid, nth_proc - tot_num_fin_proc);
                     }
-                    dequeue(cpus[i], cur_time);
+                    rmv_proc(cpus[i], cur_time);
                 }
             }
         }
@@ -278,7 +278,7 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
     return temp;
 }
 
-void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
+void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
     process_t *start = cpu->head;
 
@@ -316,7 +316,7 @@ void enqueue(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, in
     cpu->proc_rem++;
 }
 
-void dequeue(cpu_t *cpu, int cur_time)
+void rmv_proc(cpu_t *cpu, int cur_time)
 {
     // If queue is empty, return
     if (cpu->head == NULL)
