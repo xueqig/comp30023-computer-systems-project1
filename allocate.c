@@ -44,6 +44,7 @@ void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, i
 void rmv_proc(cpu_t *cpu, int cur_time);
 int cal_num_sub_proc(int cust_skd, int num_cpus, int exe_time);
 int run_process(cpu_t *cpu, int cur_time);
+int check_proc_fin(int fin_proc_and_sub_proc1[], int pid, int num_sub_proc, char is_par);
 void sort_proc_data(int proc_data[][NUM_DATA_TYEP], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
 void print_cpu(cpu_t *cpu);
@@ -121,25 +122,9 @@ int main(int argc, char **argv)
             {
                 fin_proc_and_sub_proc1[tot_num_fin_proc_and_sub_proc++] = cpus[i]->head->pid;
 
-                if (cpus[i]->head->is_par == 'n')
+                if (check_proc_fin(fin_proc_and_sub_proc1, cpus[i]->head->pid, cpus[i]->head->num_sub_proc, cpus[i]->head->is_par))
                 {
                     tot_num_fin_proc++;
-                }
-                else
-                {
-                    // check if all subprocesses are finished
-                    int num_fin_sub_proc = 0;
-                    for (j = 0; j < NUM_PROC; j++)
-                    {
-                        if (fin_proc_and_sub_proc1[j] == cpus[i]->head->pid)
-                        {
-                            num_fin_sub_proc++;
-                        }
-                    }
-                    if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
-                    {
-                        tot_num_fin_proc++;
-                    }
                 }
             }
         }
@@ -384,6 +369,32 @@ int run_process(cpu_t *cpu, int cur_time)
     cpu->tot_rem_time--;
 
     return 1;
+}
+
+/* check if process is finished */
+int check_proc_fin(int fin_proc_and_sub_proc1[], int pid, int num_sub_proc, char is_par)
+{
+    if (is_par == 'n')
+    {
+        return 1;
+    }
+
+    // if process is parallelisable, need to check if all subprocesses are finished
+    int num_fin_sub_proc = 0, i = 0;
+
+    for (i = 0; i < NUM_PROC; i++)
+    {
+        if (fin_proc_and_sub_proc1[i] == pid)
+        {
+            num_fin_sub_proc++;
+        }
+    }
+
+    if (num_fin_sub_proc == num_sub_proc)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /* sort process data based on execution time and process id */
