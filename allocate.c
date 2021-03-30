@@ -4,6 +4,12 @@
 #include <unistd.h>
 #include <math.h>
 
+#define NUM_DATA_TYEP 4
+#define ARR_TIME_IDX 0
+#define PID_IDX 1
+#define EXE_TEIM_IDX 2
+#define IS_PAR_IDX 3
+
 typedef struct process
 {
     int arr_time;
@@ -30,6 +36,7 @@ typedef struct
 
 } cpu_t;
 
+int read_input_file(int proc_data[][NUM_DATA_TYEP]);
 cpu_t *init_cpu();
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
 void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc);
@@ -42,10 +49,8 @@ void print_queue(cpu_t *cpu);
 int main(int argc, char **argv)
 {
     int option, num_cpus;
-    FILE *input_file;
-    char buff[200];
 
-    int proc_data[100][4];
+    int proc_data[100][NUM_DATA_TYEP];
     int nth_proc = 0;
     int tot_num_proc = 0;
     int tot_num_fin_proc = 0;
@@ -69,35 +74,37 @@ int main(int argc, char **argv)
             num_cpus = atoi(optarg);
             break;
         case 'f':
-            if ((input_file = fopen(optarg, "r")))
-            {
-                // read input file and store processes data in proc_data
-                while (fgets(buff, 200, (FILE *)input_file))
-                {
-                    char *token;
-                    int num_tokens = 0;
+            // read input file
+            tot_num_proc = read_input_file(proc_data);
+        // if ((input_file = fopen(optarg, "r")))
+        // {
+        //     // read input file and store processes data in proc_data
+        //     while (fgets(buff, 200, (FILE *)input_file))
+        //     {
+        //         char *token;
+        //         int num_tokens = 0;
 
-                    // breaks the string str into multiple tokens using space
-                    token = strtok(buff, " ");
+        //         // breaks the string str into multiple tokens using space
+        //         token = strtok(buff, " ");
 
-                    while (token != NULL)
-                    {
-                        // the first three items are number
-                        if (num_tokens < 3)
-                        {
-                            proc_data[tot_num_proc][num_tokens++] = atoi(token);
-                        }
-                        // the last item is a char
-                        else
-                        {
-                            proc_data[tot_num_proc][num_tokens++] = token[0];
-                        }
-                        token = strtok(NULL, " ");
-                    }
-                    tot_num_proc++;
-                }
-                fclose(input_file);
-            }
+        //         while (token != NULL)
+        //         {
+        //             // the first three items are number
+        //             if (num_tokens < 3)
+        //             {
+        //                 proc_data[tot_num_proc][num_tokens++] = atoi(token);
+        //             }
+        //             // the last item is a char
+        //             else
+        //             {
+        //                 proc_data[tot_num_proc][num_tokens++] = token[0];
+        //             }
+        //             token = strtok(NULL, " ");
+        //         }
+        //         tot_num_proc++;
+        //     }
+        //     fclose(input_file);
+        // }
         default:
             break;
         }
@@ -247,6 +254,44 @@ int main(int argc, char **argv)
     printf("Time overhead %.2f %.2f\n", max_toh, roundf(tot_toh / tot_num_proc * 100) / 100);
     printf("Makespan %d\n", cur_time - 1);
     return 0;
+}
+
+int read_input_file(int proc_data[][NUM_DATA_TYEP])
+{
+    FILE *input_file;
+    char buff[100];
+    int tot_num_proc = 0;
+
+    if ((input_file = fopen(optarg, "r")))
+    {
+        // read input file and store processes data in proc_data
+        while (fgets(buff, 200, (FILE *)input_file))
+        {
+            char *token;
+            int num_tokens = 0;
+
+            // breaks the string str into multiple tokens using space
+            token = strtok(buff, " ");
+
+            while (token != NULL)
+            {
+                // the first three items are number
+                if (num_tokens < 3)
+                {
+                    proc_data[tot_num_proc][num_tokens++] = atoi(token);
+                }
+                // the last item is a char
+                else
+                {
+                    proc_data[tot_num_proc][num_tokens++] = token[0];
+                }
+                token = strtok(NULL, " ");
+            }
+            tot_num_proc++;
+        }
+        fclose(input_file);
+    }
+    return tot_num_proc;
 }
 
 cpu_t *init_cpu(int id)
