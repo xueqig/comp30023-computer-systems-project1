@@ -44,7 +44,7 @@ void rmv_proc(cpu_t *cpu, int cur_time);
 int run_process(cpu_t *cpu, int cur_time);
 void sort_proc_data(int proc_data[][4], int tot_num_proc);
 void sort_cpu_idx(cpu_t *cpus[], int index[], int num_cpus);
-void print_queue(cpu_t *cpu);
+void print_cpu(cpu_t *cpu);
 
 int main(int argc, char **argv)
 {
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
     while (tot_num_fin_proc < tot_num_proc)
     {
-        // add process to queue
+        // add process to cpu
         while (nth_proc < tot_num_proc && proc_data[nth_proc][ARR_TIME_IDX] == cur_time)
         {
             int indexes[num_cpus];
@@ -172,8 +172,6 @@ int main(int argc, char **argv)
 
                 if (cpus[i]->head->is_par == 'n')
                 {
-                    // tot_num_fin_proc++;
-
                     // update tah, toh and max_toh
                     int tat = cur_time - cpus[i]->head->arr_time;
                     double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
@@ -201,7 +199,6 @@ int main(int argc, char **argv)
                     }
                     if (num_fin_sub_proc == cpus[i]->head->num_sub_proc)
                     {
-                        // tot_num_fin_proc++;
                         // update tah, toh and max_toh
                         int tat = cur_time - cpus[i]->head->arr_time;
                         double toh = roundf(((double)tat / cpus[i]->head->exe_time) * 100) / 100;
@@ -232,6 +229,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
+/* read input file and return the total number of processes */
 int read_input_file(int proc_data[][NUM_DATA_TYEP])
 {
     FILE *input_file;
@@ -270,6 +268,7 @@ int read_input_file(int proc_data[][NUM_DATA_TYEP])
     return tot_num_proc;
 }
 
+/* initialise cpu */
 cpu_t *init_cpu(int id)
 {
     cpu_t *cpu = (cpu_t *)malloc(sizeof(cpu_t));
@@ -285,6 +284,7 @@ cpu_t *init_cpu(int id)
     return cpu;
 }
 
+/* create a new process */
 process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
     process_t *temp = (process_t *)malloc(sizeof(process_t));
@@ -299,29 +299,30 @@ process_t *new_process(int arr_time, int pid, double sub_pid, int exe_time, int 
     return temp;
 }
 
+/* add process to cpu */
 void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, int rem_time, char is_par, int num_sub_proc)
 {
     process_t *start = cpu->head;
 
-    // Create a new process
+    // create a new process
     process_t *temp = new_process(arr_time, pid, sub_pid, exe_time, rem_time, is_par, num_sub_proc);
 
-    // If queue is empty, then new process is head
+    // if cpu is empty, then new process is head
     if (cpu->head == NULL)
     {
         cpu->head = temp;
     }
-    // The head has greater rem_time than new process.
-    // So insert new process before head process and change head process.
+    // the head has greater rem_time than new process
+    // so insert new process before head process and change head process
     else if (cpu->head->rem_time > rem_time || (cpu->head->rem_time == rem_time && cpu->head->pid > pid))
     {
-        // Insert New process before head
+        // insert new process before head
         temp->next = cpu->head;
         cpu->head = temp;
     }
     else
     {
-        // Traverse the list and find a position to insert new process
+        // traverse the list and find a position to insert new process
         while (start->next != NULL &&
                (start->next->rem_time < rem_time ||
                 (start->next->rem_time == rem_time && start->next->pid < pid)))
@@ -329,7 +330,7 @@ void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, i
             start = start->next;
         }
 
-        // Either at the ends of the list or at required position
+        // either at the ends of the list or at required position
         temp->next = start->next;
         start->next = temp;
     }
@@ -337,25 +338,27 @@ void add_proc(cpu_t *cpu, int arr_time, int pid, double sub_pid, int exe_time, i
     cpu->proc_rem++;
 }
 
+/* remove process from cpu */
 void rmv_proc(cpu_t *cpu, int cur_time)
 {
-    // If queue is empty, return
+    // if cpu is empty, return
     if (cpu->head == NULL)
     {
         return;
     }
 
-    // if queue is not empty
+    // if cpu is not empty
     cpu->proc_rem--;
     cpu->num_fin_proc++;
 
-    // Store previous head and move head one node ahead
+    // store previous head and move head one node ahead
     process_t *temp = cpu->head;
     cpu->head = cpu->head->next;
 
     free(temp);
 }
 
+/* execute process and print execution message */
 int run_process(cpu_t *cpu, int cur_time)
 {
     if (cpu->proc_rem == 0)
@@ -381,6 +384,7 @@ int run_process(cpu_t *cpu, int cur_time)
     return 1;
 }
 
+/* sort process data based on execution time and process id */
 void sort_proc_data(int proc_data[][4], int tot_num_proc)
 {
     int i, j, key_arr_time, key_pid, key_exe_time, key_is_par;
@@ -409,6 +413,7 @@ void sort_proc_data(int proc_data[][4], int tot_num_proc)
     }
 }
 
+/* sort cpu based on time left to complete all processes */
 void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
 {
     int rem_time[num_cpus];
@@ -437,13 +442,14 @@ void sort_cpu_idx(cpu_t *cpus[], int indexes[], int num_cpus)
     }
 }
 
-void print_queue(cpu_t *cpu)
+/* print out cpu data */
+void print_cpu(cpu_t *cpu)
 {
     process_t *start = cpu->head;
 
     if (cpu->head == NULL)
     {
-        printf("queue is empty\n");
+        printf("cpu is empty\n");
         return;
     }
 
